@@ -1,0 +1,56 @@
+{% extends 'partials/base.html' %}
+
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block main %}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 class="h2">Dashboard</h1>
+</div>
+
+<div class="container">
+  <div class="row g-4">
+    
+    <!-- Left Column: Stats -->
+    <div class="col-lg-6">
+      <div class="row g-4">
+
+        <!-- Invoices Card -->
+        <div class="col-12">
+          <div class="card h-100 shadow-sm">
+            <h5 class="card-header">Invoices</h5>
+            <div class="card-body">
+              <h6 class="card-title">Total Number of Invoices: <strong>{{ invoices }}</strong></h6>
+              <h6 class="card-title">Paid Invoices: <strong>{{ paidInvoices }}</strong></h6>
+              <a href="{% url 'invoices' %}" class="btn btn-primary btn-lg mt-3">View Invoices</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Clients Card -->
+        <div class="col-12">
+          <div class="card h-100 shadow-sm">
+            <h5 class="card-header">Clients</h5>
+            <div class="card-body">
+              <h6 class="card-title">Total Number of Clients: <strong>{{ clients }}</strong></h6>
+              <a href="{% url 'clients' %}" class="btn btn-primary btn-lg mt-3">View Clients</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Right Column: Illustration / Stats Placeholder -->
+    <div class="col-lg-6 d-flex align-items-center justify-content-center">
+      <div class="text-center p-4">
+        <img src="{% static 'assets/img/empty.svg' %}" class="img-fluid mb-3" alt="Dashboard Illustration">
+        <p class="text-muted">Your key statistics will appear here soon.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

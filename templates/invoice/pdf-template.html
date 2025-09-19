@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <title>{{ p_settings.companyName }}
+ - Invoice</title>
+
+  <style>
+    body {
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #555;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 30px;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      margin: 0 0 15px 0;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid #eee;
+      margin: 20px 0;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .table th, .table td {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    .table th {
+      font-weight: 600;
+      background: #f8f9fa;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    .total-row td {
+      font-weight: bold;
+      border-top: 2px solid #eee;
+    }
+
+    img.logo {
+      width: 100px;
+      max-width: 100px;
+    }
+
+    p.notes {
+      margin-top: 30px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <h1>Invoice: {{ p_settings.companyName }}
+</h1>
+    <hr>
+
+    <!-- Invoice Info -->
+    <div class="table-responsive">
+      <table class="table">
+        <tbody>
+          <tr>
+            <td><img class="logo" src="https://host.tatiblockchain.co.za/img/skolo_logo.png" alt="Skolo Logo"></td>
+            <td></td>
+            <td></td>
+            <td>
+              Invoice #: <strong>{{ invoice.number }}</strong><br>
+              Created: {{ invoice.date_created|date }}<br>
+              Due: {{ invoice.dueDate }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Sender & Client Info -->
+    <div class="table-responsive">
+      <table class="table">
+        <tbody>
+          <tr>
+            <td>
+              <strong>{{ p_settings.companyName }}
+</strong><br>
+              {{ p_settings.addressLine1 }}<br>
+              {{ p_settings.province }}, {{ p_settings.postalCode }}<br>
+              {{ p_settings.emailAddress }}<br>
+              {{ p_settings.phoneNumber }}<br>
+              Tax Number: {{ p_settings.taxNumber }}
+            </td>
+
+            <td>
+              <strong>{{ invoice.client.clientName }}</strong><br>
+              {{ invoice.client.addressLine1 }}<br>
+              {{ invoice.client.province }}, {{ invoice.client.postalCode }}<br>
+              {{ invoice.client.emailAddress }}<br>
+              {{ invoice.client.phoneNumber }}<br>
+              Tax Number: {{ invoice.client.taxNumber }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Invoice Items -->
+    <h2>Invoice Items</h2>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>{{ product.title }}</td>
+            <td>{{ product.quantity }}</td>
+            <td>{{ product.currency }} {{ product.price }}</td>
+          </tr>
+          {% endfor %}
+          <tr class="total-row">
+            <td></td>
+            <td>Total</td>
+            <td>{{ invoiceTotal }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Notes -->
+    {% if invoice.notes %}
+    <p class="notes">{{ invoice.notes }}</p>
+    {% endif %}
+
+  </div>
+</body>
+</html>

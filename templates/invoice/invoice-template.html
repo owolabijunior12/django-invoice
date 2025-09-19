@@ -1,0 +1,175 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Invoice - {{invoice.number}}</title>
+
+    <style>
+        .invoice-box {
+            max-width: 800px;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #eee;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
+            font-size: 16px;
+            line-height: 24px;
+            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
+            color: #555;
+        }
+
+        .invoice-box table {
+            width: 100%;
+            line-height: inherit;
+            text-align: left;
+            border-collapse: collapse;
+        }
+
+        .invoice-box table td {
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .invoice-box table tr td:nth-child(2) {
+            text-align: right;
+        }
+
+        .invoice-box table tr.top table td {
+            padding-bottom: 20px;
+        }
+
+        .invoice-box table tr.top table td.title {
+            font-size: 45px;
+            line-height: 45px;
+            color: #333;
+        }
+
+        .invoice-box table tr.information table td {
+            padding-bottom: 40px;
+        }
+
+        .invoice-box table tr.heading td {
+            background: #eee;
+            border-bottom: 1px solid #ddd;
+            font-weight: bold;
+        }
+
+        .invoice-box table tr.item td {
+            border-bottom: 1px solid #eee;
+        }
+
+        .invoice-box table tr.total td:nth-child(2) {
+            border-top: 2px solid #eee;
+            font-weight: bold;
+        }
+
+        @media only screen and (max-width: 600px) {
+            .invoice-box table tr.top table td,
+            .invoice-box table tr.information table td {
+                width: 100%;
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<div class="invoice-box">
+
+    <!-- Invoice Header -->
+    <table cellpadding="0" cellspacing="0">
+        <tr class="top">
+            <td colspan="3">
+                <table>
+                    <tr>
+                        <td class="title">
+                            <img src="https://host.tatiblockchain.co.za/img/skolo_logo.png" style="width: 100%; max-width: 100px;" />
+                        </td>
+                        <td>
+                            Invoice #: {{invoice.number}}<br />
+                            Created: {{invoice.date_created|date}}<br />
+                            Due: {{invoice.dueDate}}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- Company & Client Info -->
+        <tr class="information">
+            <td colspan="3">
+                <table>
+                    <tr>
+                        <td>
+                            <strong>{{p_settings.companyName}}</strong><br />
+                            {{p_settings.addressLine1}}<br />
+                            {{p_settings.province}}, {{p_settings.postalCode}}<br />
+                            {{p_settings.emailAddress}}<br />
+                            {{p_settings.phoneNumber}}<br />
+                            {% if p_settings.taxNumber %}
+                            Tax Number: {{p_settings.taxNumber}}
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <strong>{{invoice.client.clientName}}</strong><br />
+                            {{invoice.client.addressLine1}}<br />
+                            {{invoice.client.province}}, {{invoice.client.postalCode}}<br />
+                            {{invoice.client.emailAddress}}<br />
+                            {{invoice.client.phoneNumber}}<br />
+                            {% if invoice.client.taxNumber %}
+                            Tax Number: {{invoice.client.taxNumber}}
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+
+        <!-- Items Heading -->
+        <tr class="heading">
+            <td>Item</td>
+            <td>Quantity</td>
+            <td>Price</td>
+        </tr>
+
+        <!-- Invoice Items -->
+        {% for product in products %}
+        <tr class="item">
+            <td>{{product.title}}</td>
+            <td>{{product.quantity}}</td>
+            <td>{{product.currency}} {{product.price}}</td>
+        </tr>
+        {% endfor %}
+
+        <!-- Total -->
+        <tr class="total">
+            <td></td>
+            <td></td>
+            <td>Total: {{invoiceCurrency}} {{invoiceTotal}}</td>
+        </tr>
+
+        <!-- Notes -->
+        {% if invoice.notes %}
+        <tr>
+            <td colspan="3">
+                <strong>Notes:</strong>
+                <p>{{invoice.notes}}</p>
+            </td>
+        </tr>
+        {% endif %}
+
+        <!-- Optional Bank Details -->
+        {% if p_settings.bankName and p_settings.bankAccount %}
+        <tr>
+            <td colspan="3">
+                <strong>Bank Details:</strong>
+                <p>{{p_settings.bankName}} | Account #: {{p_settings.bankAccount}}</p>
+            </td>
+        </tr>
+        {% endif %}
+    </table>
+
+</div>
+</body>
+</html>

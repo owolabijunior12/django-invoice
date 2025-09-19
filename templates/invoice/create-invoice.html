@@ -1,0 +1,162 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block css %}
+<link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block main %}
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 class="h2">Create an Invoice</h1>
+  <div class="btn-toolbar mb-2 mb-md-0">
+    <div class="btn-group me-2">
+      <a href="{% url 'invoices' %}">
+        <button type="button" class="btn btn-primary">Go Back</button>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid">
+  <div class="card">
+    <div class="card-header">
+      Iboy Technology Invoice Generator
+    </div>
+
+    <div class="card-body">
+
+      <!-- Products Section -->
+      <div class="row">
+        <div class="col-lg-12">
+          <h5 class="card-title">
+            Add Products to your invoice
+            <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#addProductModal">ADD PRODUCT</button>
+          </h5>
+
+          {% if products %}
+          <div class="table-responsive">
+            <table class="table table-striped table-sm">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Description</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Related Invoice</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for product in products %}
+                <tr>
+                  <td>{{ product.title }}</td>
+                  <td>{{ product.description }}</td>
+                  <td>{{ product.quantity }}</td>
+                  <td>{{ product.currency }} {{ product.price }}</td>
+                  <td>{{ product.invoice.number }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <br>
+
+      <!-- Invoice & Client Section -->
+      <div class="row">
+        <div class="col-lg-6">
+          <form action="#" method="post">
+            {% csrf_token %}
+            {% crispy inv_form %}
+          </form>
+
+          <!-- Dynamic Bank/Payment Details -->
+          {% if invoice.currency == 'NGN' %}
+          <div class="alert alert-info mt-3">
+            <h5>Naira Account Details</h5>
+            <p>Bank: {{ bank_details.ngn.bank_name }}</p>
+            <p>Account Number: {{ bank_details.ngn.account_number }}</p>
+            <p>Account Name: {{ bank_details.ngn.account_name }}</p>
+          </div>
+          {% elif invoice.currency == 'USD' %}
+          <div class="alert alert-info mt-3">
+            <h5>Dollar Account Details</h5>
+            <p>Bank: {{ bank_details.usd.bank_name }}</p>
+            <p>Account Number: {{ bank_details.usd.account_number }}</p>
+            <p>Account Name: {{ bank_details.usd.account_name }}</p>
+          </div>
+          {% elif invoice.currency == 'GBP' %}
+          <div class="alert alert-info mt-3">
+            <h5>Pound Account Details</h5>
+            <p>Bank: {{ bank_details.gbp.bank_name }}</p>
+            <p>Account Number: {{ bank_details.gbp.account_number }}</p>
+            <p>Account Name: {{ bank_details.gbp.account_name }}</p>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="col-lg-6">
+          <h5 class="card-title">Select Client to Add</h5>
+          <br>
+          <h5 class="card-title">Current Client: <span class="badge bg-success">{{ invoice.client.clientName }}</span></h5>
+          <br>
+
+          <div class="mb-5">
+            <form action="#" method="post">
+              {% csrf_token %}
+              {{ client_form|crispy }}
+              <button type="submit" class="btn btn-primary">ADD CLIENT</button>
+            </form>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-4">
+              <a href="{% url 'view-pdf-invoice' invoice.slug %}">
+                <button class="btn btn-info text-white">VIEW CLIENT INVOICE</button>
+              </a>
+            </div>
+            <div class="col-lg-4">
+              <a href="{% url 'view-document-invoice' invoice.slug %}">
+                <button class="btn btn-success text-white">VIEW PDF INVOICE</button>
+              </a>
+            </div>
+            <div class="col-lg-4">
+              <a href="{% url 'email-document-invoice' invoice.slug %}">
+                <button class="btn btn-warning text-white">EMAIL CLIENT INVOICE</button>
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Add Product Modal -->
+<div class="modal modal-sheet py-5" tabindex="-1" id="addProductModal">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-6 shadow">
+      <form action="#" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header border-bottom-0">
+          <h5 class="modal-title">Add Invoice Product</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body py-0">
+          {{ prod_form.as_p }}
+        </div>
+        <div class="modal-footer flex-column border-top-0">
+          <button type="submit" class="btn btn-lg btn-primary w-100 mx-0 mb-2">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
