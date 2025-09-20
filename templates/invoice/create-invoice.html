@@ -1,162 +1,383 @@
-{% extends 'partials/base.html' %}
+ {% extends 'partials/base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block css %}
-<link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet">
-{% endblock %}
-
 {% block main %}
-
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-  <h1 class="h2">Create an Invoice</h1>
-  <div class="btn-toolbar mb-2 mb-md-0">
-    <div class="btn-group me-2">
-      <a href="{% url 'invoices' %}">
-        <button type="button" class="btn btn-primary">Go Back</button>
+<div class="mx-auto max-w-7xl px-4 py-6">
+  <!-- header -->
+  <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div>
+      <nav class="text-sm text-slate-500 dark:text-slate-400" aria-label="Breadcrumb">
+        <ol class="flex items-center gap-2">
+          <li><a href="{% url 'dashboard' %}" class="hover:text-slate-700 dark:hover:text-slate-200">Dashboard</a></li>
+          <li class="opacity-40">/</li>
+          <li><a href="{% url 'invoices' %}" class="hover:text-slate-700 dark:hover:text-slate-200">Invoices</a></li>
+          <li class="opacity-40">/</li>
+          <li class="font-medium text-slate-900 dark:text-slate-100">Create</li>
+        </ol>
+      </nav>
+      <h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Create an Invoice</h1>
+      <p class="mt-1 text-slate-600 dark:text-slate-400">Add products/services, select a client, and generate your invoice.</p>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="{% url 'invoices' %}"
+         class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+        <i class="fa-solid fa-arrow-left"></i> Go Back
       </a>
+      <button type="submit" form="invoiceForm"
+              class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow ring-1 ring-blue-700/30 transition hover:translate-y-[1px] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <i class="fa-solid fa-floppy-disk"></i> Save Draft
+      </button>
     </div>
   </div>
-</div>
 
-<div class="container-fluid">
-  <div class="card">
-    <div class="card-header">
+  <!-- shell card -->
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="border-b border-slate-200 px-6 py-4 text-sm text-slate-700 dark:border-slate-800 dark:text-slate-300">
       Iboy Technology Invoice Generator
     </div>
 
-    <div class="card-body">
+    <div class="p-6">
+      <!-- grid: left content + right summary -->
+      <div class="grid grid-cols-1 gap-8 xl:grid-cols-3">
+        <div class="xl:col-span-2">
+          <!-- products -->
+          <section class="mb-8">
+            <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+              <h2 class="text-base font-semibold text-slate-900 dark:text-slate-100">Products / Services</h2>
+              <button id="openProductModal" type="button"
+                      class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
+                <i class="fa-solid fa-plus"></i> Add Product
+              </button>
+            </div>
 
-      <!-- Products Section -->
-      <div class="row">
-        <div class="col-lg-12">
-          <h5 class="card-title">
-            Add Products to your invoice
-            <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#addProductModal">ADD PRODUCT</button>
-          </h5>
+            {% if products %}
+            <div class="mt-4 overflow-auto rounded-lg border border-slate-200 dark:border-slate-800">
+              <table class="w-full text-left text-sm" id="lineItemsTable">
+                <thead class="bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:bg-slate-800/70 dark:text-slate-300">
+                  <tr>
+                    <th class="px-4 py-3">Title</th>
+                    <th class="px-4 py-3">Description</th>
+                    <th class="px-4 py-3 text-right">Qty</th>
+                    <th class="px-4 py-3 text-right">Unit Price</th>
+                    <th class="px-4 py-3 text-right">Line Total</th>
+                    <th class="px-4 py-3">Invoice #</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                  {% for product in products %}
+                  <!-- machine-readable qty/price for live calc -->
+                  <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                      data-qty="{{ product.quantity|default:'0' }}"
+                      data-price="{{ product.price|default:'0' }}">
+                    <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{{ product.title }}</td>
+                    <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ product.description }}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-right">{{ product.quantity }}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-right" data-cur="{{ product.currency }}">{{ product.currency }} {{ product.price }}</td>
+                    <td class="whitespace-nowrap px-4 py-3 text-right font-medium" data-line-total>—</td>
+                    <td class="whitespace-nowrap px-4 py-3">{{ product.invoice.number }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="mt-4 rounded-lg border border-dashed border-slate-300 p-6 text-center text-slate-600 dark:border-slate-700 dark:text-slate-400">
+              No products added yet. Click <span class="font-medium">Add Product</span> to include line items in this invoice.
+            </div>
+            {% endif %}
+          </section>
 
-          {% if products %}
-          <div class="table-responsive">
-            <table class="table table-striped table-sm">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Description</th>
-                  <th>Quantity</th>
-                  <th>Price</th>
-                  <th>Related Invoice</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for product in products %}
-                <tr>
-                  <td>{{ product.title }}</td>
-                  <td>{{ product.description }}</td>
-                  <td>{{ product.quantity }}</td>
-                  <td>{{ product.currency }} {{ product.price }}</td>
-                  <td>{{ product.invoice.number }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+          <!-- invoice + client forms -->
+          <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <!-- invoice form -->
+            <section>
+              <h3 class="mb-3 text-base font-semibold text-slate-900 dark:text-slate-100">Invoice Details</h3>
+              <form id="invoiceForm" action="#" method="post" novalidate>
+                {% csrf_token %}
+                {% crispy inv_form %}
+                <!-- keep hidden numeric total for backend -->
+                <input type="hidden" name="computed_total" id="computedTotalHidden">
+              </form>
+
+              <!-- dynamic bank/payment details -->
+              {% if invoice.currency == 'NGN' %}
+              <div class="mt-4 rounded-lg border border-slate-200 bg-blue-50/60 p-4 text-sm text-slate-800 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-200">
+                <h4 class="mb-2 font-semibold"><i class="fa-solid fa-building-columns mr-2 text-blue-600"></i>Naira Account Details</h4>
+                <p><span class="text-slate-500">Bank:</span> {{ bank_details.ngn.bank_name }}</p>
+                <p><span class="text-slate-500">Account Number:</span> {{ bank_details.ngn.account_number }}</p>
+                <p><span class="text-slate-500">Account Name:</span> {{ bank_details.ngn.account_name }}</p>
+              </div>
+              {% elif invoice.currency == 'USD' %}
+              <div class="mt-4 rounded-lg border border-slate-200 bg-blue-50/60 p-4 text-sm text-slate-800 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-200">
+                <h4 class="mb-2 font-semibold"><i class="fa-solid fa-building-columns mr-2 text-blue-600"></i>Dollar Account Details</h4>
+                <p><span class="text-slate-500">Bank:</span> {{ bank_details.usd.bank_name }}</p>
+                <p><span class="text-slate-500">Account Number:</span> {{ bank_details.usd.account_number }}</p>
+                <p><span class="text-slate-500">Account Name:</span> {{ bank_details.usd.account_name }}</p>
+              </div>
+              {% elif invoice.currency == 'GBP' %}
+              <div class="mt-4 rounded-lg border border-slate-200 bg-blue-50/60 p-4 text-sm text-slate-800 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-200">
+                <h4 class="mb-2 font-semibold"><i class="fa-solid fa-building-columns mr-2 text-blue-600"></i>Pound Account Details</h4>
+                <p><span class="text-slate-500">Bank:</span> {{ bank_details.gbp.bank_name }}</p>
+                <p><span class="text-slate-500">Account Number:</span> {{ bank_details.gbp.account_number }}</p>
+                <p><span class="text-slate-500">Account Name:</span> {{ bank_details.gbp.account_name }}</p>
+              </div>
+              {% endif %}
+            </section>
+
+            <!-- client selection + actions -->
+            <section>
+              <div class="flex items-center justify-between">
+                <h3 class="mb-3 text-base font-semibold text-slate-900 dark:text-slate-100">Client</h3>
+                <div class="text-sm text-slate-600 dark:text-slate-400">
+                  Current:
+                  <span class="ml-1 inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                    {{ invoice.client.clientName|default:"—" }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+                <form action="#" method="post" class="space-y-3" novalidate>
+                  {% csrf_token %}
+                  {{ client_form|crispy }}
+                  <button type="submit"
+                          class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white">
+                    <i class="fa-solid fa-user-plus"></i> Add Client
+                  </button>
+                </form>
+              </div>
+
+              <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <a href="{% url 'view-pdf-invoice' invoice.slug %}"
+                   class="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+                  <i class="fa-solid fa-eye"></i> View Client Invoice
+                </a>
+                <a href="{% url 'view-document-invoice' invoice.slug %}"
+                   class="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                  <i class="fa-solid fa-file-pdf"></i> View PDF Invoice
+                </a>
+                <a href="{% url 'email-document-invoice' invoice.slug %}"
+                   class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                  <i class="fa-solid fa-envelope"></i> Email Client Invoice
+                </a>
+              </div>
+            </section>
           </div>
-          {% endif %}
         </div>
+
+        <!-- RIGHT: Totals summary -->
+        <aside class="h-max rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div class="mb-4 flex items-center justify-between">
+            <h3 class="text-base font-semibold text-slate-900 dark:text-slate-100">Summary</h3>
+            <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+              {{ invoice.currency|default:"" }}
+            </span>
+          </div>
+
+          <dl class="space-y-3 text-sm">
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-500 dark:text-slate-400">Subtotal</dt>
+              <dd id="sumSubtotal" class="font-medium text-slate-900 dark:text-slate-100" aria-live="polite">—</dd>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-500 dark:text-slate-400">Discount</dt>
+              <dd class="w-40">
+                <div class="flex items-center gap-2">
+                  <input id="discountValue" type="number" step="0.01" value="0"
+                         class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                  <select id="discountType"
+                          class="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+                    <option value="flat">Flat</option>
+                    <option value="percent">%</option>
+                  </select>
+                </div>
+              </dd>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-500 dark:text-slate-400">Tax (%)</dt>
+              <dd class="w-40">
+                <input id="taxPercent" type="number" step="0.01" value="0"
+                       class="w-full rounded-lg border border-slate-300 bg-white px-2 py-1 text-right text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+              </dd>
+            </div>
+
+            <hr class="my-2 border-slate-200 dark:border-slate-800">
+
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-500 dark:text-slate-400">Tax Amount</dt>
+              <dd id="sumTax" class="font-medium text-slate-900 dark:text-slate-100" aria-live="polite">—</dd>
+            </div>
+            <div class="flex items-center justify-between">
+              <dt class="text-slate-500 dark:text-slate-400">Discount Amount</dt>
+              <dd id="sumDiscount" class="font-medium text-slate-900 dark:text-slate-100" aria-live="polite">—</dd>
+            </div>
+
+            <!-- Styled, read-only Grand Total input -->
+            <div class="pt-2">
+              <label for="computedTotalDisplay" class="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Grand Total</label>
+              <input
+                id="computedTotalDisplay"
+                type="text"
+                readonly
+                class="w-full rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-3 text-base font-semibold text-emerald-900 shadow-sm focus:outline-none dark:border-emerald-900/50 dark:bg-emerald-900/20 dark:text-emerald-200"
+                aria-live="polite"
+              />
+            </div>
+          </dl>
+
+          <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">Totals are calculated locally for preview and can be persisted if you map <code>computed_total</code> server-side.</p>
+        </aside>
       </div>
-
-      <br>
-
-      <!-- Invoice & Client Section -->
-      <div class="row">
-        <div class="col-lg-6">
-          <form action="#" method="post">
-            {% csrf_token %}
-            {% crispy inv_form %}
-          </form>
-
-          <!-- Dynamic Bank/Payment Details -->
-          {% if invoice.currency == 'NGN' %}
-          <div class="alert alert-info mt-3">
-            <h5>Naira Account Details</h5>
-            <p>Bank: {{ bank_details.ngn.bank_name }}</p>
-            <p>Account Number: {{ bank_details.ngn.account_number }}</p>
-            <p>Account Name: {{ bank_details.ngn.account_name }}</p>
-          </div>
-          {% elif invoice.currency == 'USD' %}
-          <div class="alert alert-info mt-3">
-            <h5>Dollar Account Details</h5>
-            <p>Bank: {{ bank_details.usd.bank_name }}</p>
-            <p>Account Number: {{ bank_details.usd.account_number }}</p>
-            <p>Account Name: {{ bank_details.usd.account_name }}</p>
-          </div>
-          {% elif invoice.currency == 'GBP' %}
-          <div class="alert alert-info mt-3">
-            <h5>Pound Account Details</h5>
-            <p>Bank: {{ bank_details.gbp.bank_name }}</p>
-            <p>Account Number: {{ bank_details.gbp.account_number }}</p>
-            <p>Account Name: {{ bank_details.gbp.account_name }}</p>
-          </div>
-          {% endif %}
-        </div>
-
-        <div class="col-lg-6">
-          <h5 class="card-title">Select Client to Add</h5>
-          <br>
-          <h5 class="card-title">Current Client: <span class="badge bg-success">{{ invoice.client.clientName }}</span></h5>
-          <br>
-
-          <div class="mb-5">
-            <form action="#" method="post">
-              {% csrf_token %}
-              {{ client_form|crispy }}
-              <button type="submit" class="btn btn-primary">ADD CLIENT</button>
-            </form>
-          </div>
-
-          <div class="row">
-            <div class="col-lg-4">
-              <a href="{% url 'view-pdf-invoice' invoice.slug %}">
-                <button class="btn btn-info text-white">VIEW CLIENT INVOICE</button>
-              </a>
-            </div>
-            <div class="col-lg-4">
-              <a href="{% url 'view-document-invoice' invoice.slug %}">
-                <button class="btn btn-success text-white">VIEW PDF INVOICE</button>
-              </a>
-            </div>
-            <div class="col-lg-4">
-              <a href="{% url 'email-document-invoice' invoice.slug %}">
-                <button class="btn btn-warning text-white">EMAIL CLIENT INVOICE</button>
-              </a>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
     </div>
   </div>
 </div>
 
-<!-- Add Product Modal -->
-<div class="modal modal-sheet py-5" tabindex="-1" id="addProductModal">
-  <div class="modal-dialog">
-    <div class="modal-content rounded-6 shadow">
-      <form action="#" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="modal-header border-bottom-0">
-          <h5 class="modal-title">Add Invoice Product</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body py-0">
-          {{ prod_form.as_p }}
-        </div>
-        <div class="modal-footer flex-column border-top-0">
-          <button type="submit" class="btn btn-lg btn-primary w-100 mx-0 mb-2">Save changes</button>
-        </div>
-      </form>
+<!-- Add Product Modal (Tailwind + tiny JS) -->
+<div id="productModal" class="invisible fixed inset-0 z-50 grid place-items-center opacity-0 transition duration-200">
+  <div class="modal-backdrop pointer-events-none absolute inset-0 bg-black/50"></div>
+  <div role="dialog" aria-modal="true" aria-labelledby="addProductLabel"
+       class="relative z-10 w-full max-w-lg scale-95 rounded-2xl border border-slate-200 bg-white shadow-2xl transition dark:border-slate-800 dark:bg-slate-900">
+    <div class="flex items-center justify-between border-b border-slate-200 p-5 dark:border-slate-800">
+      <h3 id="addProductLabel" class="text-base font-semibold text-slate-900 dark:text-slate-100">
+        <i class="fa-solid fa-box mr-2 text-blue-600"></i> Add Invoice Product
+      </h3>
+      <button id="closeProductTop" type="button"
+              class="rounded-lg p-2 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:hover:bg-slate-800">
+        <i class="fa-solid fa-xmark"></i><span class="sr-only">Close</span>
+      </button>
     </div>
+
+    <form action="#" method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <div class="p-5">
+        {{ prod_form.as_p }}
+      </div>
+      <div class="flex items-center justify-end gap-3 border-t border-slate-200 p-5 dark:border-slate-800">
+        <button id="closeProductBottom" type="button"
+                class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+          Cancel
+        </button>
+        <button type="submit"
+                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow ring-1 ring-blue-700/30 transition hover:translate-y-[1px] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <i class="fa-solid fa-floppy-disk"></i> Save Changes
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
+<!-- tiny enhancements -->
+<script>
+  // style plain fields in modal
+  (function enhanceInputs(){
+    const sel = '#productModal input:not([type=checkbox]):not([type=radio]), #productModal select, #productModal textarea';
+    document.querySelectorAll(sel).forEach(el => {
+      if (!/rounded|focus:ring/.test(el.className)) {
+        el.classList.add(
+          'w-full','rounded-lg','border','border-slate-300','bg-white','px-3','py-2.5','text-sm','text-slate-800',
+          'placeholder-slate-400','shadow-sm','focus:outline-none','focus:ring-2','focus:ring-blue-500',
+          'dark:border-slate-700','dark:bg-slate-950','dark:text-slate-200'
+        );
+      }
+    });
+  })();
+
+  // modal controller
+  (function modal(){
+    const modal = document.getElementById('productModal');
+    const dialog = modal.querySelector('[role="dialog"]');
+    const openBtn = document.getElementById('openProductModal');
+    const closeTop = document.getElementById('closeProductTop');
+    const closeBottom = document.getElementById('closeProductBottom');
+
+    const open = () => {
+      modal.classList.remove('invisible','opacity-0');
+      dialog.classList.remove('scale-95');
+      setTimeout(() => (modal.querySelector('input,select,textarea,button') || {}).focus?.(), 10);
+    };
+    const close = () => {
+      modal.classList.add('opacity-0');
+      dialog.classList.add('scale-95');
+      setTimeout(() => modal.classList.add('invisible'), 150);
+    };
+
+    openBtn?.addEventListener('click', open);
+    closeTop?.addEventListener('click', close);
+    closeBottom?.addEventListener('click', close);
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  })();
+
+  // live totals calculator
+  (function totals(){
+    const table = document.getElementById('lineItemsTable');
+    const currency = '{{ invoice.currency|default:"" }}' || (table?.querySelector('[data-cur]')?.getAttribute('data-cur') || '');
+    const fmt = (n) => {
+      const num = Number(n || 0);
+      const intl = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      return (currency ? currency + ' ' : '') + intl.format(num);
+    };
+
+    const els = {
+      subtotal: document.getElementById('sumSubtotal'),
+      tax:      document.getElementById('sumTax'),
+      disc:     document.getElementById('sumDiscount'),
+      grand:    document.getElementById('sumGrand'), // (kept if you still reference it)
+      discVal:  document.getElementById('discountValue'),
+      discType: document.getElementById('discountType'),
+      taxPct:   document.getElementById('taxPercent'),
+      hidden:   document.getElementById('computedTotalHidden')
+    };
+
+    function calc(){
+      // line totals
+      let subtotal = 0;
+      table?.querySelectorAll('tbody tr').forEach(row => {
+        const qty = Number(row.getAttribute('data-qty') || 0);
+        const price = Number(row.getAttribute('data-price') || 0);
+        const line = qty * price;
+        subtotal += line;
+        const cell = row.querySelector('[data-line-total]');
+        if (cell) cell.textContent = fmt(line);
+      });
+
+      // discount
+      const dv = Number(els.discVal?.value || 0);
+      const dt = els.discType?.value || 'flat';
+      const discountAmt = dt === 'percent' ? (subtotal * (dv / 100)) : dv;
+
+      // tax
+      const taxPct = Number(els.taxPct?.value || 0);
+      const taxableBase = Math.max(0, subtotal - discountAmt);
+      const taxAmt = taxableBase * (taxPct / 100);
+
+      const grand = Math.max(0, taxableBase + taxAmt);
+
+      // paint
+      if (els.subtotal) els.subtotal.textContent = fmt(subtotal);
+      if (els.disc)     els.disc.textContent     = '− ' + fmt(discountAmt);
+      if (els.tax)      els.tax.textContent      = fmt(taxAmt);
+      if (els.grand)    els.grand.textContent    = fmt(grand);
+
+      // NEW: update visible, styled display field
+      const display = document.getElementById('computedTotalDisplay');
+      if (display) display.value = fmt(grand);
+
+      // keep hidden numeric for backend
+      if (els.hidden) els.hidden.value = grand.toFixed(2);
+    }
+
+    ['input','change'].forEach(evt => {
+      els.discVal?.addEventListener(evt, calc);
+      els.discType?.addEventListener(evt, calc);
+      els.taxPct?.addEventListener(evt, calc);
+    });
+
+    // initial
+    calc();
+  })();
+</script>
 {% endblock %}

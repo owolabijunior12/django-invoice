@@ -2,63 +2,134 @@
 {% load static %}
 {% load crispy_forms_tags %}
 
-{% block css %}
-<link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet">
-{% endblock %}
-
 {% block main %}
-
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Products</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <a href="{% url 'create-invoice' %}">
-                <button type="button" class="btn btn-primary">Add New Invoice</button>
-            </a>
-        </div>
+<div class="mx-auto max-w-7xl px-4 py-6">
+  <!-- Header -->
+  <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Products</h1>
+      <p class="mt-1 text-slate-600 dark:text-slate-400">Line items attached to your invoices.</p>
     </div>
-</div>
+    <div class="flex items-center gap-2">
+      <a href="{% url 'create-invoice' %}"
+         class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow ring-1 ring-blue-700/30 transition hover:translate-y-[1px] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <i class="fa-solid fa-file-invoice"></i> Add New Invoice
+      </a>
+      {% if products|length > 0 %}
+      <button id="exportCsvBtn"
+              class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+        <i class="fa-solid fa-file-arrow-down"></i> Export CSV
+      </button>
+      {% endif %}
+    </div>
+  </div>
 
-{% if products|length > 0 %}
-<div class="table-responsive">
-    <table class="table table-striped table-sm">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Description</th>
-                <th>Quantity</th>
-                <th>Price</th>
-                <th>Related Invoice</th>
-            </tr>
+  {% if products|length > 0 %}
+  <!-- Data card -->
+  <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <!-- Toolbar -->
+    <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 md:flex-row md:items-center md:justify-between dark:border-slate-800">
+      <div class="flex items-center gap-2">
+        <h2 class="text-base font-semibold text-slate-900 dark:text-slate-100">All Products</h2>
+        <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ products|length }}</span>
+      </div>
+      <div class="relative w-full max-w-xs">
+        <input id="productSearch" type="text" placeholder="Search by title, description, invoice #…"
+               class="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 py-2 text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+        <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-2.5 text-slate-400"></i>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="overflow-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="sticky top-0 z-10 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:bg-slate-800/70 dark:text-slate-300">
+          <tr>
+            <th class="px-4 py-3">Title</th>
+            <th class="px-4 py-3">Description</th>
+            <th class="px-4 py-3">Quantity</th>
+            <th class="px-4 py-3">Price</th>
+            <th class="px-4 py-3">Related Invoice</th>
+          </tr>
         </thead>
-        <tbody>
-            {% for product in products %}
-            <tr>
-                <td>{{ product.title }}</td>
-                <td>{{ product.description }}</td>
-                <td>{{ product.quantity }}</td>
-                <td>{{ product.currency }} {{ product.price }}</td>
-                <td>
-                    {% if product.invoice %}
-                        {{ product.invoice.number }}
-                    {% else %}
-                        <span class="text-muted">—</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
+        <tbody id="productTableBody" class="divide-y divide-slate-100 dark:divide-slate-800">
+          {% for product in products %}
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+            <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{{ product.title }}</td>
+            <td class="px-4 py-3 text-slate-700 dark:text-slate-300">{{ product.description }}</td>
+            <td class="whitespace-nowrap px-4 py-3 text-slate-800 dark:text-slate-200">{{ product.quantity }}</td>
+            <td class="whitespace-nowrap px-4 py-3 text-slate-800 dark:text-slate-200">{{ product.currency }} {{ product.price }}</td>
+            <td class="whitespace-nowrap px-4 py-3">
+              {% if product.invoice %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  <i class="fa-solid fa-hashtag text-slate-500"></i>{{ product.invoice.number }}
+                </span>
+              {% else %}
+                <span class="text-slate-400">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
         </tbody>
-    </table>
-</div>
-{% else %}
-<div class="row">
-    <div class="col-lg-2"></div>
-    <div class="col-lg-8 text-center">
-        <h3>Start by creating an invoice to see products listed here</h3>
-        <img class="img-fluid" src="{% static 'assets/img/empty.svg' %}" alt="Iboy Technology">
+      </table>
     </div>
-    <div class="col-lg-2"></div>
+  </section>
+  {% else %}
+  <!-- Empty state -->
+  <section class="rounded-xl border border-dashed border-slate-300 bg-white p-10 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div class="mx-auto max-w-md">
+      <img src="{% static 'assets/img/empty.svg' %}" alt="" class="mx-auto mb-4 h-32 w-auto opacity-90 dark:opacity-80">
+      <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100">No products yet</h3>
+      <p class="mt-1 text-slate-600 dark:text-slate-400">Create an invoice to start adding products and services.</p>
+      <a href="{% url 'create-invoice' %}"
+         class="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <i class="fa-solid fa-file-invoice"></i> Add New Invoice
+      </a>
+    </div>
+  </section>
+  {% endif %}
 </div>
-{% endif %}
 
+<!-- Tiny enhancements: search + CSV export -->
+<script>
+  // live search
+  (function(){
+    const input = document.getElementById('productSearch');
+    const body = document.getElementById('productTableBody');
+    if (!input || !body) return;
+    let t;
+    const rows = () => Array.from(body.querySelectorAll('tr'));
+    const run = () => {
+      const q = input.value.trim().toLowerCase();
+      rows().forEach(r => { r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none'; });
+    };
+    input.addEventListener('input', () => { clearTimeout(t); t = setTimeout(run, 120); });
+  })();
+
+  // CSV export (client-side)
+  (function(){
+    const btn = document.getElementById('exportCsvBtn');
+    const body = document.getElementById('productTableBody');
+    if (!btn || !body) return;
+    btn.addEventListener('click', () => {
+      const rows = Array.from(body.querySelectorAll('tr'));
+      const safe = v => `"${String(v ?? '').replace(/"/g,'""')}"`;
+      const data = rows.map(r => {
+        const tds = r.querySelectorAll('td');
+        const title = tds[0]?.innerText.trim() || '';
+        const desc  = tds[1]?.innerText.trim() || '';
+        const qty   = tds[2]?.innerText.trim() || '';
+        const price = tds[3]?.innerText.trim() || '';
+        const inv   = (tds[4]?.innerText.trim() || '').replace(/^#\s*/,'');
+        return [title, desc, qty, price, inv].map(safe).join(',');
+      });
+      const csv = ['"Title","Description","Quantity","Price","Related Invoice"', ...data].join('\n');
+      const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'products.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+  })();
+</script>
 {% endblock %}

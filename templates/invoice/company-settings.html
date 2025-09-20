@@ -1,82 +1,235 @@
-{% extends 'partials/base.html' %}
+ {% extends 'partials/base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
 
 {% block main %}
+<div class="mx-auto max-w-6xl px-4 py-6">
+  <!-- Header / breadcrumb -->
+  <div class="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <nav class="text-sm text-slate-500 dark:text-slate-400" aria-label="Breadcrumb">
+        <ol class="flex items-center gap-2">
+          <li><a href="{% url 'dashboard' %}" class="hover:text-slate-700 dark:hover:text-slate-200">Dashboard</a></li>
+          <li class="opacity-40">/</li>
+          <li class="font-medium text-slate-900 dark:text-slate-100">Company Settings</li>
+        </ol>
+      </nav>
+      <h1 class="mt-2 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Company Settings</h1>
+      <p class="mt-1 text-slate-600 dark:text-slate-400">Manage your company profile, branding, and bank details.</p>
+    </div>
 
-  <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Company Settings</h1>
-  </div>
-
-  <div class="container">
-    <div class="card shadow-sm">
-      <div class="card-body">
-
-        <div class="row">
-          <!-- Company Info -->
-          <div class="col-lg-6">
-            <h5 class="card-title"><strong>Company Name:</strong> {{ company.companyName }}</h5>
-            <hr>
-            <p class="card-text"><strong>Address:</strong> {{ company.addressLine1 }}</p>
-            <p class="card-text"><strong>State/Province:</strong> {{ company.state_or_province }}</p>
-            <p class="card-text"><strong>Country:</strong> {{ company.country }}</p>
-            <p class="card-text"><strong>Postal Code:</strong> {{ company.postalCode }}</p>
-            <br>
-            <p class="card-text"><strong>Phone Number:</strong> {{ company.phoneNumber }}</p>
-            <p class="card-text"><strong>Email:</strong> {{ company.emailAddress }}</p>
-            <br>
-            <p class="card-text"><strong>Tax Number:</strong> {{ company.taxNumber }}</p>
-          </div>
-
-          <!-- Company Logo -->
-          <div class="col-lg-5">
-            {% if company.companyLogo %}
-              <div class="p-3">
-                <img class="img-fluid rounded shadow" src="{{ company.companyLogo.url }}" alt="{{ company.companyName }}">
-              </div>
-            {% else %}
-              <div class="p-3">
-                <img class="img-fluid" src="{% static 'assets/img/empty.svg' %}" alt="No Logo">
-              </div>
-            {% endif %}
-          </div>
-        </div>
-
-        <hr>
-
-        <!-- Bank Details Section -->
-        <h5 class="mt-4">Bank Details</h5>
-        {% if company.bank_details.all %}
-          <div class="table-responsive">
-            <table class="table table-striped table-sm">
-              <thead>
-                <tr>
-                  <th>Currency</th>
-                  <th>Bank Name</th>
-                  <th>Account Name</th>
-                  <th>Account Number</th>
-                  <th>Swift Code</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for bank in company.bank_details.all %}
-                <tr>
-                  <td>{{ bank.currency }}</td>
-                  <td>{{ bank.bank_name }}</td>
-                  <td>{{ bank.account_name }}</td>
-                  <td>{{ bank.account_number }}</td>
-                  <td>{{ bank.swift_code }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        {% else %}
-          <p class="text-muted">No bank details available. Please add one in the admin panel.</p>
-        {% endif %}
-
-      </div>
+    <div class="flex items-center gap-2">
+      <a href="/admin/"
+         class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+        <i class="fa-solid fa-gear"></i>
+        Admin
+      </a>
+      <button type="button"
+              class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow ring-1 ring-blue-700/30 transition hover:translate-y-[1px] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <i class="fa-solid fa-floppy-disk"></i>
+        Save Changes
+      </button>
     </div>
   </div>
 
+  <!-- Main card -->
+  <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <div class="p-6">
+      <div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <!-- Company information -->
+        <section aria-labelledby="company-info">
+          <div class="mb-6 flex items-center gap-3">
+            <i class="fa-solid fa-building text-xl text-blue-600"></i>
+            <h2 id="company-info" class="text-lg font-semibold text-slate-900 dark:text-slate-100">Company Information</h2>
+          </div>
+
+          <dl class="divide-y divide-slate-100 text-sm dark:divide-slate-800">
+            <div class="grid grid-cols-3 gap-4 py-4">
+              <dt class="col-span-1 text-slate-500 dark:text-slate-400">Company Name</dt>
+              <dd class="col-span-2 font-medium text-slate-900 dark:text-slate-100">{{ company.companyName|default:"—" }}</dd>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 py-4">
+              <dt class="col-span-1 text-slate-500 dark:text-slate-400">Phone Number</dt>
+              <dd class="col-span-2">
+                <a href="tel:{{ company.phoneNumber }}" class="font-medium text-slate-900 hover:underline dark:text-slate-100">{{ company.phoneNumber|default:"—" }}</a>
+              </dd>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 py-4">
+              <dt class="col-span-1 text-slate-500 dark:text-slate-400">Email Address</dt>
+              <dd class="col-span-2">
+                <a href="mailto:{{ company.emailAddress }}" class="font-medium text-blue-600 hover:underline dark:text-blue-300">{{ company.emailAddress|default:"—" }}</a>
+              </dd>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 py-4">
+              <dt class="col-span-1 text-slate-500 dark:text-slate-400">Address</dt>
+              <dd class="col-span-2">
+                <div class="font-medium text-slate-900 dark:text-slate-100">{{ company.addressLine1|default:"—" }}</div>
+                <div class="text-slate-700 dark:text-slate-300">
+                  {{ company.state_or_province|default:"" }}{% if company.state_or_province and company.postalCode %}, {% endif %}{{ company.postalCode|default:"" }}
+                </div>
+                <div class="text-slate-700 dark:text-slate-300">{{ company.country|default:"" }}</div>
+              </dd>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 py-4">
+              <dt class="col-span-1 text-slate-500 dark:text-slate-400">Tax Number</dt>
+              <dd class="col-span-2 font-medium text-slate-900 dark:text-slate-100">{{ company.taxNumber|default:"—" }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- Company logo -->
+        <section aria-labelledby="company-logo">
+          <div class="mb-6 flex items-center gap-3">
+            <i class="fa-solid fa-image text-xl text-blue-600"></i>
+            <h2 id="company-logo" class="text-lg font-semibold text-slate-900 dark:text-slate-100">Company Logo</h2>
+          </div>
+
+          <div class="flex items-start justify-center">
+            {% if company.companyLogo %}
+              <figure class="w-full max-w-sm rounded-xl border border-slate-200 p-4 shadow-sm dark:border-slate-800">
+                <div class="aspect-[4/3] overflow-hidden rounded-lg bg-slate-50 ring-1 ring-inset ring-slate-200 dark:bg-slate-950 dark:ring-slate-800">
+                  <img src="{{ company.companyLogo.url }}"
+                       alt="{{ company.companyName }}"
+                       class="h-full w-full object-contain" loading="lazy">
+                </div>
+                <figcaption class="mt-4 flex items-center justify-between text-sm">
+                  <span class="truncate text-slate-600 dark:text-slate-400">{{ company.companyName }}</span>
+                  <a href="{{ company.companyLogo.url }}" download
+                     class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+                    <i class="fa-solid fa-download"></i> Download
+                  </a>
+                </figcaption>
+              </figure>
+            {% else %}
+              <div class="w-full max-w-sm rounded-xl border-2 border-dashed border-slate-300 p-8 text-center dark:border-slate-700">
+                <i class="fa-solid fa-image mb-3 text-4xl text-slate-300 dark:text-slate-600"></i>
+                <p class="font-medium text-slate-600 dark:text-slate-300">No company logo uploaded</p>
+                <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Upload a logo in the admin panel.</p>
+                <a href="/admin/"
+                   class="mt-4 inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <i class="fa-solid fa-gear"></i> Open Admin
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        </section>
+      </div>
+
+      <hr class="my-8 border-slate-200 dark:border-slate-800">
+
+      <!-- Bank details -->
+      <section aria-labelledby="bank-details">
+        <div class="mb-6 flex items-center gap-3">
+          <i class="fa-solid fa-building-columns text-xl text-blue-600"></i>
+          <h2 id="bank-details" class="text-lg font-semibold text-slate-900 dark:text-slate-100">Bank Details</h2>
+        </div>
+
+        {% if company.bank_details.all %}
+          <ul class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {% for bank in company.bank_details.all %}
+            <li class="group rounded-xl border border-slate-200 bg-slate-50 p-5 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-900/40">
+              <div class="mb-4 flex items-center justify-between">
+                <span class="inline-flex items-center rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-800 dark:bg-blue-400/10 dark:text-blue-300">
+                  {{ bank.currency|default:"Currency" }}
+                </span>
+                <i class="fa-solid fa-piggy-bank text-slate-400"></i>
+              </div>
+
+              <dl class="space-y-4 text-sm">
+                <div>
+                  <dt class="text-slate-500 dark:text-slate-400">Bank Name</dt>
+                  <dd class="font-medium text-slate-900 dark:text-slate-100">{{ bank.bank_name|default:"—" }}</dd>
+                </div>
+
+                <div>
+                  <dt class="text-slate-500 dark:text-slate-400">Account Name</dt>
+                  <dd class="text-slate-900 dark:text-slate-100">{{ bank.account_name|default:"—" }}</dd>
+                </div>
+
+                <div>
+                  <dt class="text-slate-500 dark:text-slate-400">Account Number</dt>
+                  <dd class="flex items-center gap-2">
+                    <span class="font-mono text-slate-900 dark:text-slate-100">{{ bank.account_number|default:"—" }}</span>
+                    {% if bank.account_number %}
+                    <button type="button" class="copy-btn rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                            data-copy="{{ bank.account_number }}" aria-label="Copy account number">
+                      Copy
+                    </button>
+                    {% endif %}
+                  </dd>
+                </div>
+
+                <div>
+                  <dt class="text-slate-500 dark:text-slate-400">SWIFT Code</dt>
+                  <dd class="flex items-center gap-2">
+                    <span class="font-mono text-slate-900 dark:text-slate-100">{{ bank.swift_code|default:"—" }}</span>
+                    {% if bank.swift_code %}
+                    <button type="button" class="copy-btn rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                            data-copy="{{ bank.swift_code }}" aria-label="Copy SWIFT code">
+                      Copy
+                    </button>
+                    {% endif %}
+                  </dd>
+                </div>
+              </dl>
+            </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center dark:border-slate-700 dark:bg-slate-900/40">
+            <i class="fa-solid fa-building-columns mb-3 text-4xl text-slate-300 dark:text-slate-600"></i>
+            <h3 class="text-lg font-medium text-slate-700 dark:text-slate-300">No bank details available</h3>
+            <p class="mt-1 text-slate-500 dark:text-slate-400">Please add bank information in the admin panel.</p>
+            <a href="/admin/"
+               class="mt-4 inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <i class="fa-solid fa-gear"></i> Go to Admin Panel
+            </a>
+          </div>
+        {% endif %}
+      </section>
+    </div>
+
+    <!-- Footer actions -->
+    <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 dark:border-slate-800 dark:bg-slate-900/40">
+      <a href="/admin/"
+         class="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+        <i class="fa-solid fa-pen-to-square"></i> Edit in Admin
+      </a>
+      <button type="button"
+              class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow ring-1 ring-blue-700/30 transition hover:translate-y-[1px] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <i class="fa-solid fa-floppy-disk"></i> Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- tiny enhancement scripts -->
+<script>
+  // copy buttons for bank details
+  document.querySelectorAll('.copy-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const val = btn.getAttribute('data-copy');
+      try {
+        await navigator.clipboard.writeText(val);
+        const original = btn.textContent;
+        btn.textContent = 'Copied';
+        btn.classList.add('bg-emerald-600','text-white','border-emerald-700');
+        setTimeout(() => {
+          btn.textContent = original.trim() || 'Copy';
+          btn.classList.remove('bg-emerald-600','text-white','border-emerald-700');
+        }, 1200);
+      } catch (_) {
+        // fallback
+        const ta = document.createElement('textarea');
+        ta.value = val; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+      }
+    });
+  });
+</script>
 {% endblock %}

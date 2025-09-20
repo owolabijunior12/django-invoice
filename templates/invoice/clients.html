@@ -1,79 +1,405 @@
-{% extends 'partials/base.html' %}
+ {% extends 'partials/base.html' %}
 {% load static %}
 {% load crispy_forms_tags %}
 
 {% block css %}
-<link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
 {% endblock %}
 
 {% block main %}
+<div class="mx-auto max-w-7xl px-4 py-8">
+  <!-- Page header -->
+  <header class="mb-8">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <nav class="text-sm text-slate-500 dark:text-slate-400" aria-label="Breadcrumb">
+          <ol class="flex items-center gap-2">
+            <li><a href="/" class="hover:text-slate-700 dark:hover:text-slate-200">Dashboard</a></li>
+            <li aria-hidden="true" class="opacity-40">/</li>
+            <li class="font-medium text-slate-900 dark:text-slate-100">Clients</li>
+          </ol>
+        </nav>
+        <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">Client Management</h1>
+        <p class="mt-1 text-slate-600 dark:text-slate-400">Manage clients, contact details, and locations.</p>
+      </div>
 
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-  <h1 class="h2">Clients</h1>
-  <div class="btn-toolbar mb-2 mb-md-0">
-    <div class="btn-group me-2">
-      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClientModal">
-        Add New Client
+      <div class="flex items-center gap-3">
+        <button type="button"
+                class="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                id="exportCsvBtn">
+          <i class="fa-solid fa-file-arrow-down"></i>
+          Export CSV
+        </button>
+
+        <button id="openClientModal"
+                type="button"
+                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg ring-1 ring-blue-700/30 transition hover:translate-y-[1px] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <i class="fa-solid fa-plus"></i>
+          Add Client
+        </button>
+      </div>
+    </div>
+  </header>
+
+  {% if clients %}
+  <!-- Quick stats -->
+  <section class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+    <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div class="flex items-center gap-4">
+        <span class="grid h-10 w-10 place-items-center rounded-lg bg-blue-50 dark:bg-blue-900/30">
+          <i class="fa-solid fa-users text-blue-600 dark:text-blue-300"></i>
+        </span>
+        <div>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Total clients</p>
+          <p class="text-2xl font-semibold text-slate-900 dark:text-white">{{ clients|length }}</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div class="flex items-center gap-4">
+        <span class="grid h-10 w-10 place-items-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30">
+          <i class="fa-solid fa-globe text-emerald-600 dark:text-emerald-300"></i>
+        </span>
+        <div>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Countries</p>
+          <p class="text-2xl font-semibold text-slate-900 dark:text-white">{{ unique_countries }}</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div class="flex items-center gap-4">
+        <span class="grid h-10 w-10 place-items-center rounded-lg bg-fuchsia-50 dark:bg-fuchsia-900/30">
+          <i class="fa-solid fa-envelope text-fuchsia-600 dark:text-fuchsia-300"></i>
+        </span>
+        <div>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Active emails</p>
+          <p class="text-2xl font-semibold text-slate-900 dark:text-white">{{ clients|length }}</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div class="flex items-center gap-4">
+        <span class="grid h-10 w-10 place-items-center rounded-lg bg-orange-50 dark:bg-orange-900/30">
+          <i class="fa-solid fa-phone text-orange-600 dark:text-orange-300"></i>
+        </span>
+        <div>
+          <p class="text-sm text-slate-500 dark:text-slate-400">Phone contacts</p>
+          <p class="text-2xl font-semibold text-slate-900 dark:text-white">{{ clients|length }}</p>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- Data card -->
+  <section class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+    <!-- toolbar -->
+    <div class="flex flex-col gap-3 border-b border-slate-200 px-4 py-4 md:flex-row md:items-center md:justify-between dark:border-slate-800">
+      <div class="flex items-center gap-2">
+        <h2 class="text-base font-semibold text-slate-900 dark:text-slate-100">All Clients</h2>
+        <span class="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">{{ clients|length }}</span>
+      </div>
+
+      <div class="flex flex-1 items-center justify-start gap-3 md:justify-end">
+        <div class="relative w-full max-w-xs">
+          <input id="clientSearch" type="text" placeholder="Search name, email, phone…"
+                 class="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 py-2 text-sm text-slate-800 placeholder-slate-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+          <i class="fa-solid fa-magnifying-glass pointer-events-none absolute left-3 top-2.5 text-slate-400"></i>
+        </div>
+
+        <div class="relative">
+          <button type="button" id="tableDensityBtn"
+                  class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800">
+            <i class="fa-solid fa-arrows-up-down"></i>
+            Density
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- table -->
+    <div class="overflow-auto">
+      <table class="w-full text-left">
+        <thead class="sticky top-0 z-10 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:bg-slate-800/70 dark:text-slate-300">
+          <tr>
+            <th scope="col" class="px-6 py-3">Client</th>
+            <th scope="col" class="px-6 py-3">Contact</th>
+            <th scope="col" class="px-6 py-3">Location</th>
+            <th scope="col" class="px-6 py-3">Status</th>
+            <th scope="col" class="px-6 py-3 text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="clientTableBody" class="divide-y divide-slate-100 text-sm dark:divide-slate-800">
+          {% for client in clients %}
+          <tr class="transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50">
+            <!-- Client -->
+            <td class="whitespace-nowrap px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div class="grid h-10 w-10 flex-shrink-0 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-sm font-semibold text-white">
+                  {{ client.clientName|first|upper }}
+                </div>
+                <div>
+                  <div class="font-medium text-slate-900 dark:text-slate-100">{{ client.clientName }}</div>
+                  <div class="text-xs text-slate-500 dark:text-slate-400">
+                    Added: {{ client.created_at|date:"M j, Y"|default:"—" }}
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Contact -->
+            <td class="whitespace-nowrap px-6 py-4">
+              <div class="text-slate-900 dark:text-slate-100">
+                <a href="mailto:{{ client.emailAddress }}" class="hover:underline">{{ client.emailAddress }}</a>
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">
+                <a href="tel:{{ client.phoneNumber }}" class="hover:underline">{{ client.phoneNumber }}</a>
+              </div>
+            </td>
+
+            <!-- Location -->
+            <td class="whitespace-nowrap px-6 py-4">
+              <div class="text-slate-900 dark:text-slate-100">
+                {{ client.state_or_province|default:"—" }}
+              </div>
+              <div class="text-xs text-slate-500 dark:text-slate-400">
+                {{ client.country|default:"—" }}
+              </div>
+            </td>
+
+            <!-- Status -->
+            <td class="whitespace-nowrap px-6 py-4">
+              {% with status_text=client.status|default:"Active" %}
+              {% if status_text|lower == 'active' %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300">
+                  <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> {{ status_text }}
+                </span>
+              {% elif status_text|lower == 'inactive' %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span> {{ status_text }}
+                </span>
+              {% else %}
+                <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                  <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span> {{ status_text }}
+                </span>
+              {% endif %}
+              {% endwith %}
+            </td>
+
+            <!-- Actions -->
+            <td class="whitespace-nowrap px-6 py-4">
+              <div class="flex items-center justify-end gap-3 text-base">
+                <button type="button" class="text-blue-600 hover:text-blue-800 focus:outline-none dark:text-blue-400 dark:hover:text-blue-300" title="Edit">
+                  <i class="fa-solid fa-pen-to-square"></i><span class="sr-only">Edit {{ client.clientName }}</span>
+                </button>
+                <a href="#" class="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white" title="View">
+                  <i class="fa-solid fa-eye"></i><span class="sr-only">View {{ client.clientName }}</span>
+                </a>
+                <button type="button" class="text-rose-600 hover:text-rose-700 focus:outline-none dark:text-rose-400 dark:hover:text-rose-300" title="Delete">
+                  <i class="fa-solid fa-trash"></i><span class="sr-only">Delete {{ client.clientName }}</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- footer / pagination (example) -->
+    <div class="flex flex-col items-start justify-between gap-3 border-t border-slate-200 px-4 py-4 text-sm md:flex-row md:items-center dark:border-slate-800">
+      <p class="text-slate-700 dark:text-slate-300">
+        Showing <span class="font-semibold">1</span>–<span class="font-semibold">10</span> of <span class="font-semibold">{{ clients|length }}</span>
+      </p>
+      <nav class="ml-auto" aria-label="Pagination">
+        <ul class="flex items-center gap-2">
+          <li><button class="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Previous</button></li>
+          <li><button class="rounded-md border border-blue-500 bg-blue-50 px-3 py-1.5 font-medium text-blue-700 dark:border-blue-400 dark:bg-blue-400/10 dark:text-blue-300">1</button></li>
+          <li><button class="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">2</button></li>
+          <li><button class="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">3</button></li>
+          <li><button class="rounded-md border border-slate-300 px-3 py-1.5 font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">Next</button></li>
+        </ul>
+      </nav>
+    </div>
+  </section>
+
+  {% else %}
+  <!-- empty state -->
+  <section class="rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div class="mx-auto max-w-md">
+      <div class="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full bg-slate-100 dark:bg-slate-800">
+        <i class="fa-solid fa-users text-3xl text-slate-400 dark:text-slate-500"></i>
+      </div>
+      <h3 class="text-2xl font-semibold text-slate-800 dark:text-slate-100">No clients yet</h3>
+      <p class="mt-2 text-slate-600 dark:text-slate-400">Add your first client to start organizing customer information.</p>
+      <button id="openClientModalEmpty"
+              type="button"
+              class="mt-6 rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white shadow-lg ring-1 ring-blue-700/30 transition hover:translate-y-[1px] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        Add Client
       </button>
     </div>
-  </div>
+  </section>
+  {% endif %}
 </div>
 
-{% if clients %}
-<div class="table-responsive">
-  <table class="table table-striped table-sm">
-    <thead>
-      <tr>
-        <th scope="col">Client Name</th>
-        <th scope="col">Email Address</th>
-        <th scope="col">Phone Number</th>
-        <th scope="col">Address Line</th>
-        <th scope="col">State/Province</th>
-        <th scope="col">Country</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for client in clients %}
-      <tr>
-        <td>{{client.clientName}}</td>
-        <td>{{client.emailAddress}}</td>
-        <td>{{client.phoneNumber}}</td>
-        <td>{{client.addressLine1}}</td>
-        <td>{{client.state_or_province}}</td>
-        <td>{{client.country}}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-{% else %}
-<div class="row text-center">
-  <div class="col-lg-12">
-    <h3>Add Your First Client</h3>
-    <img class="img-fluid" src="{% static 'assets/img/empty.svg' %}" alt="No Clients">
-  </div>
-</div>
-{% endif %}
+<!-- Modal -->
+<div id="clientModal"
+     class="invisible fixed inset-0 z-[100] grid place-items-center opacity-0 transition duration-200">
+  <!-- backdrop -->
+  <div class="modal-backdrop pointer-events-none absolute inset-0 bg-black/50"></div>
 
-<!-- MODAL -->
-<div class="modal modal-sheet py-5" tabindex="-1" id="addClientModal">
-  <div class="modal-dialog">
-    <div class="modal-content rounded-6 shadow">
-      <form action="#" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="modal-header border-bottom-0">
-          <h5 class="modal-title">Add New Client</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body py-0">
-          {{form|crispy}}
-        </div>
-        <div class="modal-footer flex-column border-top-0">
-          <button type="submit" class="btn btn-lg btn-primary w-100 mx-0 mb-2">Save Client</button>
-        </div>
-      </form>
+  <!-- panel -->
+  <div role="dialog" aria-modal="true" aria-labelledby="addClientModalLabel"
+       class="relative z-[101] w-full max-w-3xl scale-95 rounded-2xl border border-slate-200 bg-white shadow-2xl transition dark:border-slate-800 dark:bg-slate-900">
+    <div class="flex items-center justify-between border-b border-slate-200 p-6 dark:border-slate-800">
+      <h5 id="addClientModalLabel" class="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <i class="fa-solid fa-user-plus mr-2 text-blue-600"></i> Add New Client
+      </h5>
+      <button id="closeClientModalTop" type="button"
+              class="rounded-lg bg-slate-100 p-2 text-slate-600 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
+        <i class="fa-solid fa-xmark"></i><span class="sr-only">Close</span>
+      </button>
     </div>
+
+    <form action="#" method="post" enctype="multipart/form-data" novalidate>
+      {% csrf_token %}
+      <div class="p-6">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {% for field in form %}
+          <div class="{% if field.name == 'addressLine1' or field.name == 'country' %}md:col-span-2{% endif %}">
+            <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+              {{ field.label }}
+            </label>
+
+            {% if field.field.widget.input_type == 'select' %}
+              {{ field|as_crispy_field }}
+            {% else %}
+              {{ field }}
+            {% endif %}
+
+            {% if field.errors %}
+              <p class="mt-1 text-sm text-rose-600">{{ field.errors.0 }}</p>
+            {% endif %}
+            {% if field.help_text %}
+              <p class="mt-1 text-xs text-slate-500 dark:text-slate-400">{{ field.help_text }}</p>
+            {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-end gap-3 border-t border-slate-200 p-6 dark:border-slate-800">
+        <button id="closeClientModalBottom" type="button"
+                class="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+          Cancel
+        </button>
+        <button type="submit"
+                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-md ring-1 ring-blue-700/30 transition hover:translate-y-[1px] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <i class="fa-solid fa-floppy-disk"></i>
+          Save Client
+        </button>
+      </div>
+    </form>
   </div>
 </div>
 
+<!-- Minimal JS enhancements -->
+<script>
+  // Tailwind-friendly input styling for Django fields (if they don't already have classes)
+  (function enhanceInputs(){
+    const sel = '#clientModal input:not([type=checkbox]):not([type=radio]), #clientModal select, #clientModal textarea';
+    document.querySelectorAll(sel).forEach(el => {
+      if (!el.className || !/rounded|border|focus:ring/.test(el.className)) {
+        el.classList.add(
+          'w-full','rounded-lg','border','border-slate-300','bg-white','px-3','py-2.5','text-sm','text-slate-800',
+          'placeholder-slate-400','shadow-sm','focus:outline-none','focus:ring-2','focus:ring-blue-500',
+          'dark:border-slate-700','dark:bg-slate-950','dark:text-slate-200'
+        );
+      }
+    });
+  })();
+
+  // Modal open/close
+  (function modal(){
+    const modal = document.getElementById('clientModal');
+    const dialog = modal.querySelector('[role="dialog"]');
+    const openers = [document.getElementById('openClientModal'), document.getElementById('openClientModalEmpty')].filter(Boolean);
+    const closers = [document.getElementById('closeClientModalTop'), document.getElementById('closeClientModalBottom')].filter(Boolean);
+    const open = () => {
+      modal.classList.remove('invisible','opacity-0');
+      dialog.classList.remove('scale-95');
+      setTimeout(() => (modal.querySelector('input,select,textarea,button') || {}).focus?.(), 10);
+    };
+    const close = () => {
+      modal.classList.add('opacity-0');
+      dialog.classList.add('scale-95');
+      setTimeout(() => modal.classList.add('invisible'), 150);
+    };
+    openers.forEach(b => b.addEventListener('click', open));
+    closers.forEach(b => b.addEventListener('click', close));
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  })();
+
+  // Density toggle (comfortable / compact)
+  (function density(){
+    const btn = document.getElementById('tableDensityBtn');
+    const body = document.getElementById('clientTableBody');
+    if (!btn || !body) return;
+    let compact = false;
+    btn.addEventListener('click', () => {
+      compact = !compact;
+      body.querySelectorAll('td, th').forEach(el => el.classList.toggle('py-4', !compact));
+      body.querySelectorAll('td, th').forEach(el => el.classList.toggle('py-2.5', compact));
+      btn.innerHTML = compact
+        ? '<i class="fa-solid fa-arrows-up-down"></i> Comfortable'
+        : '<i class="fa-solid fa-arrows-up-down"></i> Density';
+    });
+  })();
+
+  // Live client-side search (debounced)
+  (function search(){
+    const input = document.getElementById('clientSearch');
+    const rows = () => Array.from(document.querySelectorAll('#clientTableBody tr'));
+    if (!input) return;
+    let timer;
+    const run = () => {
+      const term = input.value.trim().toLowerCase();
+      rows().forEach(r => {
+        r.style.display = r.textContent.toLowerCase().includes(term) ? '' : 'none';
+      });
+    };
+    input.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(run, 120);
+    });
+  })();
+
+  // CSV export (client-side, simple)
+  (function exportCsv(){
+    const btn = document.getElementById('exportCsvBtn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const rows = Array.from(document.querySelectorAll('#clientTableBody tr'));
+      const data = rows.map(r => {
+        const tds = r.querySelectorAll('td');
+        const name = tds[0]?.innerText.trim().replace(/\s+Added:.*/,'') || '';
+        const email = tds[1]?.querySelector('a[href^="mailto:"]')?.innerText.trim() || '';
+        const phone = tds[1]?.querySelector('a[href^="tel:"]')?.innerText.trim() || '';
+        const state = tds[2]?.childNodes[1]?.textContent.trim() || '';
+        const country = tds[2]?.childNodes[3]?.textContent.trim() || '';
+        const status = tds[3]?.innerText.trim() || '';
+        return [name,email,phone,state,country,status].map(v => `"${v.replace(/"/g,'""')}"`).join(',');
+      });
+      const csv = ['"Name","Email","Phone","State/Province","Country","Status"', ...data].join('\n');
+      const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'clients.csv'; a.click();
+      URL.revokeObjectURL(url);
+    });
+  })();
+</script>
 {% endblock %}

@@ -1,175 +1,327 @@
- <!DOCTYPE html>
-<html>
+ {% load static %}
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <title>Invoice - {{invoice.number}}</title>
+  <meta charset="utf-8" />
+  <title>Iboy Technology — Invoice #{{ invoice.number }}</title>
 
-    <style>
-        .invoice-box {
-            max-width: 800px;
-            margin: auto;
-            padding: 30px;
-            border: 1px solid #eee;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.15);
-            font-size: 16px;
-            line-height: 24px;
-            font-family: 'Helvetica Neue', 'Helvetica', Helvetica, Arial, sans-serif;
-            color: #555;
-        }
-
-        .invoice-box table {
-            width: 100%;
-            line-height: inherit;
-            text-align: left;
-            border-collapse: collapse;
-        }
-
-        .invoice-box table td {
-            padding: 5px;
-            vertical-align: top;
-        }
-
-        .invoice-box table tr td:nth-child(2) {
-            text-align: right;
-        }
-
-        .invoice-box table tr.top table td {
-            padding-bottom: 20px;
-        }
-
-        .invoice-box table tr.top table td.title {
-            font-size: 45px;
-            line-height: 45px;
-            color: #333;
-        }
-
-        .invoice-box table tr.information table td {
-            padding-bottom: 40px;
-        }
-
-        .invoice-box table tr.heading td {
-            background: #eee;
-            border-bottom: 1px solid #ddd;
-            font-weight: bold;
-        }
-
-        .invoice-box table tr.item td {
-            border-bottom: 1px solid #eee;
-        }
-
-        .invoice-box table tr.total td:nth-child(2) {
-            border-top: 2px solid #eee;
-            font-weight: bold;
-        }
-
-        @media only screen and (max-width: 600px) {
-            .invoice-box table tr.top table td,
-            .invoice-box table tr.information table td {
-                width: 100%;
-                display: block;
-                text-align: center;
+  <!-- Tailwind (CDN for preview; use your compiled CSS in production) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              black: '#0a0a0a',
+              panel: '#0d1117',
+              ink:   '#e5e7eb',
             }
+          },
+          fontFamily: {
+            mono: ['ui-monospace','SFMono-Regular','Menlo','Monaco','Consolas','Liberation Mono','Courier New','monospace']
+          }
         }
-    </style>
+      }
+    };
+  </script>
+
+  <!-- Print: A4, keep color, avoid breaks on key blocks -->
+  <style>
+    @page { size: A4; background: #0a0a0a;  }
+    @media print {
+      .no-print { display: none !important; }
+      html, body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; background: #0a0a0a !important; }
+      .shadow, .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; }
+      .ring, .ring-1, .ring-2 { box-shadow: none !important; }
+      .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+    }
+    .num { font-variant-numeric: tabular-nums; }
+    .avoid-break { break-inside: avoid; page-break-inside: avoid; }
+  </style>
 </head>
 
-<body>
-<div class="invoice-box">
+<body class="bg-brand-black text-brand-ink antialiased">
+  <!-- Screen-only print bar -->
+  <div class="no-print sticky top-0 z-10 border-b border-emerald-800/50 bg-black/80 backdrop-blur">
+    <div class="mx-auto flex max-w-3xl items-center justify-between px-6 py-3">
+      <div class="text-sm font-medium text-emerald-300">Preview • Invoice #{{ invoice.number }}</div>
+      <button onclick="window.print()"
+              class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M6 2a2 2 0 00-2 2v2h12V4a2 2 0 00-2-2H6z"/><path fill-rule="evenodd" d="M4 8a2 2 0 00-2 2v3a1 1 0 001 1h1v-2a2 2 0 012-2h8a2 2 0 012 2v2h1a1 1 0 001-1v-3a2 2 0 00-2-2H4zm3 6a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+        Print
+      </button>
+    </div>
+  </div>
 
-    <!-- Invoice Header -->
-    <table cellpadding="0" cellspacing="0">
-        <tr class="top">
-            <td colspan="3">
-                <table>
-                    <tr>
-                        <td class="title">
-                            <img src="https://host.tatiblockchain.co.za/img/skolo_logo.png" style="width: 100%; max-width: 100px;" />
-                        </td>
-                        <td>
-                            Invoice #: {{invoice.number}}<br />
-                            Created: {{invoice.date_created|date}}<br />
-                            Due: {{invoice.dueDate}}
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
+  <main class="mx-auto my-8 max-w-3xl px-6">
+    <div class="overflow-hidden rounded-2xl border border-emerald-800/50 bg-brand-panel shadow-lg avoid-break">
+      <!-- Header -->
+      <section class="bg-black px-6 py-6 text-white">
+        <div class="flex items-start justify-between gap-6">
+          <div class="flex items-center gap-4">
+            {% if p_settings.companyLogo %}
+              <img src="{{ p_settings.companyLogo.url }}" alt="Iboy Technology" class="h-16 w-auto object-contain">
+            {% endif %}
+            <div>
+              <h1 class="text-2xl font-semibold tracking-tight">Iboy Technology</h1>
+              <p class="text-sm text-emerald-300">Software Development Invoice</p>
+              <p class="text-xs text-slate-300 mt-1">{{ p_settings.addressLine1 }}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="block font-semibold text-sm text-white">#{{ invoice.number }}</span>
+            <div class="mt-2">
+              <p class="text-[11px] uppercase tracking-wider text-slate-300">Created</p>
+              <p class="font-medium">{{ invoice.date_created|date }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 h-1 w-full rounded bg-emerald-600/70"></div>
+      </section>
 
-        <!-- Company & Client Info -->
-        <tr class="information">
-            <td colspan="3">
-                <table>
-                    <tr>
-                        <td>
-                            <strong>{{p_settings.companyName}}</strong><br />
-                            {{p_settings.addressLine1}}<br />
-                            {{p_settings.province}}, {{p_settings.postalCode}}<br />
-                            {{p_settings.emailAddress}}<br />
-                            {{p_settings.phoneNumber}}<br />
-                            {% if p_settings.taxNumber %}
-                            Tax Number: {{p_settings.taxNumber}}
-                            {% endif %}
-                        </td>
+      <!-- Bill To (kept minimal per your last snippet) -->
+      <section class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 avoid-break">
+        <div class="rounded-xl border border-emerald-900/40 bg-brand-panel p-4">
+          <h2 class="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-300">Bill To</h2>
+          <div class="space-y-1 text-sm">
+            <p class="font-semibold text-white">{{ invoice.client.clientName }}</p>
+            <p>{{ invoice.client.addressLine1 }}</p>
+          </div>
+        </div>
+      </section>
 
-                        <td>
-                            <strong>{{invoice.client.clientName}}</strong><br />
-                            {{invoice.client.addressLine1}}<br />
-                            {{invoice.client.province}}, {{invoice.client.postalCode}}<br />
-                            {{invoice.client.emailAddress}}<br />
-                            {{invoice.client.phoneNumber}}<br />
-                            {% if invoice.client.taxNumber %}
-                            Tax Number: {{invoice.client.taxNumber}}
-                            {% endif %}
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
+      <!-- Items -->
+      <section class="px-6 pb-6 avoid-break">
+        <div class="overflow-hidden rounded-xl border border-emerald-900/40">
+          <table class="w-full border-collapse text-sm">
+            <thead class="bg-emerald-700 text-white">
+              <tr>
+                <th class="px-4 py-3 text-left font-semibold">Item</th>
+                <th class="px-4 py-3 text-left font-semibold">Description</th>
+                <th class="px-4 py-3 text-right font-semibold">Qty</th>
+                <th class="px-4 py-3 text-right font-semibold">Unit</th>
+                <th class="px-4 py-3 text-right font-semibold">Line Total</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-emerald-900/40">
+              {% for product in products %}
+              <tr class="align-top odd:bg-black even:bg-brand-panel"
+                  data-qty="{{ product.quantity|default:'0' }}"
+                  data-price="{{ product.price|default:'0' }}">
+                <td class="px-4 py-3 font-medium text-white">{{ product.title }}</td>
+                <td class="px-4 py-3 text-slate-300">{{ product.description }}</td>
+                <td class="num px-4 py-3 text-right font-semibold text-emerald-300">
+                  <span class="inline-block rounded bg-emerald-900/40 px-2 py-1">{{ product.quantity }}</span>
+                </td>
+                <td class="num px-4 py-3 whitespace-nowrap text-right font-semibold text-white">
+                  <span class="inline-block rounded border border-emerald-700 bg-emerald-900/30 px-2 py-1">
+                    {{ product.currency }} {{ product.price }}
+                  </span>
+                </td>
+                <td class="num px-4 py-3 whitespace-nowrap text-right font-semibold text-emerald-300" data-line-total>—</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot class="bg-brand-panel">
+              <tr>
+                <td colspan="3"></td>
+                <td class="px-4 py-3 text-right text-slate-300">Total</td>
+                <td id="grandTotalText" class="num px-4 py-3 text-right font-bold text-emerald-300">
+                  {{ invoiceCurrency }} {{ invoiceTotal }}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
 
-        <!-- Items Heading -->
-        <tr class="heading">
-            <td>Item</td>
-            <td>Quantity</td>
-            <td>Price</td>
-        </tr>
+      <!-- Totals & Payment Schedule -->
+      <section class="px-6 pb-4 avoid-break">
+        <div class="rounded-xl border border-emerald-900/40 bg-brand-panel p-4">
+          <h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-emerald-300">Totals & Payment Schedule</h3>
+          <dl class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div class="flex items-center justify-between rounded border border-emerald-800 bg-black/30 px-3 py-2">
+              <dt class="text-slate-300">Project Total</dt>
+              <dd id="totalAmt" class="num font-semibold text-emerald-300">—</dd>
+            </div>
+            <div class="flex items-center justify-between rounded border border-emerald-800 bg-black/30 px-3 py-2">
+              <dt class="text-slate-300">Upfront (70%) — due to start</dt>
+              <dd id="depositAmt" class="num font-semibold text-white">—</dd>
+            </div>
+            <div class="flex items-center justify-between rounded border border-emerald-800 bg-black/30 px-3 py-2">
+              <dt class="text-slate-300">Balance (30%) — after finalization</dt>
+              <dd id="balanceAmt" class="num font-semibold text-white">—</dd>
+            </div>
+          </dl>
+          <p class="mt-2 text-xs text-slate-400">Amounts calculated from the project total for display.</p>
+        </div>
+      </section>
 
-        <!-- Invoice Items -->
-        {% for product in products %}
-        <tr class="item">
-            <td>{{product.title}}</td>
-            <td>{{product.quantity}}</td>
-            <td>{{product.currency}} {{product.price}}</td>
-        </tr>
-        {% endfor %}
+      <!-- Payment & Bank Details (ONLY the matching currency shows) -->
+      <section class="px-6 pb-2 avoid-break">
+        <div class="mb-3 flex items-center justify-between">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-emerald-300">Payment Details</h3>
+          {% with cur=invoice.currency|default_if_none:invoiceCurrency %}
+            {% if cur %}
+              <span class="rounded-full border border-emerald-500 bg-emerald-900/30 px-2.5 py-0.5 text-xs font-medium text-emerald-300">
+                Currency: {{ cur }}
+              </span>
+            {% endif %}
+          {% endwith %}
+        </div>
 
-        <!-- Total -->
-        <tr class="total">
-            <td></td>
-            <td></td>
-            <td>Total: {{invoiceCurrency}} {{invoiceTotal}}</td>
-        </tr>
+        {% with rawcur=invoice.currency|default_if_none:invoiceCurrency %}
+        {% with cur=rawcur|upper %}
+          {% if cur == 'NGN' or cur == '₦' %}
+            <!-- NGN ONLY -->
+            <div id="ngnCard" class="rounded-xl border border-emerald-600 bg-emerald-900/25 p-4 shadow-sm">
+              <div class="mb-2 flex items-center justify-between">
+                <span class="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-900/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">NGN</span>
+                <span class="text-[11px] text-slate-400">Naira</span>
+              </div>
+              <dl class="space-y-1 text-sm">
+                <div class="flex justify-between gap-3"><dt class="text-slate-400">Bank</dt><dd class="font-medium text-white">{{ bank_detail.ngn.bank_name|default:"GT Bank" }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-slate-400">Account Name</dt><dd class="text-white">{{ bank_detail.ngn.account_name|default:"Owolabi Destiny oluwnifemi" }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-slate-400">Account:</dt><dd class="font-mono text-emerald-300">{{ bank_detail.ngn.account_number|default:"0697369500" }}</dd></div>
+              </dl>
+            </div>
+          {% elif cur == 'USD' or cur == '$' %}
+            <!-- USD ONLY -->
+            <div id="usdCard" class="rounded-xl border border-emerald-600 bg-emerald-900/25 p-4 shadow-sm">
+              <div class="mb-2 flex items-center justify-between">
+                <span class="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-900/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">USD</span>
+                <span class="text-[11px] text-slate-400">US Dollar</span>
+              </div>
+              <dl class="space-y-1 text-sm">
+                <div class="flex justify-between gap-3"><dt class="text-slate-400">Bank</dt><dd class="font-medium text-white">{{ bank_detail.usd.bank_name|default:"—" }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-slate-400">Account Name</dt><dd class="text-white">{{ bank_detail.usd.account_name|default:"Iboy Technology" }}</dd></div>
+                <div class="flex justify-between gap-3"><dt class="text-slate-400">Account / IBAN</dt><dd class="font-mono text-emerald-300">{{ bank_detail.usd.account_number|default:"—" }}</dd></div>
+                {% if bank_detail.usd.swift_code %}
+                <div class="flex justify-between gap-3"><dt class="text-slate-400">SWIFT</dt><dd class="font-mono text-emerald-300">{{ bank_detail.usd.swift_code }}</dd></div>
+                {% endif %}
+              </dl>
+            </div>
+          {% else %}
+            <!-- Fallback: if currency not detected, show both (JS will hide the other based on Total line) -->
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div id="ngnCard" class="rounded-xl border border-emerald-900/40 bg-brand-panel p-4 shadow-sm">
+                <div class="mb-2 flex items-center justify-between">
+                  <span class="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-900/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">NGN</span>
+                  <span class="text-[11px] text-slate-400">Naira</span>
+                </div>
+                <dl class="space-y-1 text-sm">
+                    <div class="flex justify-between gap-3"><dt class="text-slate-400">Bank</dt><dd class="font-medium text-white">{{ bank_detail.ngn.bank_name|default:"GT Bank" }}</dd></div>
+                    <div class="flex justify-between gap-3"><dt class="text-slate-400">Account Name</dt><dd class="text-white">{{ bank_detail.ngn.account_name|default:"Owolabi Destiny oluwnifemi" }}</dd></div>
+                    <div class="flex justify-between gap-3"><dt class="text-slate-400">Account:</dt><dd class="font-mono text-emerald-300">{{ bank_detail.ngn.account_number|default:"0697369500" }}</dd></div>
+               </dl>
+              </div>
+              <div id="usdCard" class="rounded-xl border border-emerald-900/40 bg-brand-panel p-4 shadow-sm">
+                <div class="mb-2 flex items-center justify-between">
+                  <span class="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-900/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">USD</span>
+                  <span class="text-[11px] text-slate-400">US Dollar</span>
+                </div>
+                <dl class="space-y-1 text-sm">
+                  <div class="flex justify-between gap-3"><dt class="text-slate-400">Bank</dt><dd class="font-medium text-white">{{ bank_detail.usd.bank_name|default:"—" }}</dd></div>
+                  <div class="flex justify-between gap-3"><dt class="text-slate-400">Account Name</dt><dd class="text-white">{{ bank_detail.usd.account_name|default:"Iboy Technology" }}</dd></div>
+                  <div class="flex justify-between gap-3"><dt class="text-slate-400">Account / IBAN</dt><dd class="font-mono text-emerald-300">{{ bank_detail.usd.account_number|default:"—" }}</dd></div>
+                  {% if bank_detail.usd.swift_code %}
+                  <div class="flex justify-between gap-3"><dt class="text-slate-400">SWIFT</dt><dd class="font-mono text-emerald-300">{{ bank_detail.usd.swift_code }}</dd></div>
+                  {% endif %}
+                </dl>
+              </div>
+            </div>
+          {% endif %}
+        {% endwith %}
+        {% endwith %}
 
-        <!-- Notes -->
-        {% if invoice.notes %}
-        <tr>
-            <td colspan="3">
-                <strong>Notes:</strong>
-                <p>{{invoice.notes}}</p>
-            </td>
-        </tr>
-        {% endif %}
+        <!-- Instructions & Terms -->
+        <div class="mt-4 grid grid-row gap-4 sm:grid-row avoid-break">
+          <div class="rounded-xl border border-emerald-900/40 bg-brand-panel p-4">
+            <h4 class="mb-2 text-sm font-semibold text-emerald-200">Payment Instructions</h4>
+            <ul class="list-inside list-disc text-sm leading-6 text-slate-200">
+              <li>Pay in the invoice currency (<span class="font-medium text-emerald-300">NGN or USD</span>).</li>
+              <li>Include reference <span class="font-medium text-emerald-300">#{{ invoice.number }}</span>.</li>
+              <li>For USD wires, set fees as <em>OUR</em> (payer covers charges).</li>
+              <li>Send proof of payment to <span class="font-medium text-emerald-300">{{ p_settings.emailAddress }}</span>.</li>
+            </ul>
+          </div>
+          <div class="rounded-xl border border-emerald-900/40 bg-brand-panel p-4">
+            <h4 class="mb-2 text-sm font-semibold text-emerald-200">Terms &amp; Conditions</h4>
+            <ul class="list-inside list-disc text-sm leading-6 text-slate-200">
+              <li><span class="font-medium">Upfront:</span> <span class="font-semibold text-emerald-300">70%</span> due to commence work.</li>
+              <li><span class="font-medium">Balance:</span> remaining 30% due within <span class="font-semibold text-emerald-300">10 days</span> after finalization/sign-off.</li>
+              <li><span class="font-medium">Late charge:</span> payments received after 10 days incur an extra <span class="font-semibold text-emerald-300">5%</span> on the outstanding balance.</li>
+              <li><span class="font-medium">Scope changes / extra revisions:</span> outside the agreed design require a written change order and attract a minimum <span class="font-semibold text-emerald-300">15%</span> surcharge or standard hourly rate (whichever is higher).</li>
+              <li><span class="font-medium">Ownership & license:</span> full IP transfers on receipt of full payment; prior to that, work is for review only.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
 
-        <!-- Optional Bank Details -->
-        {% if p_settings.bankName and p_settings.bankAccount %}
-        <tr>
-            <td colspan="3">
-                <strong>Bank Details:</strong>
-                <p>{{p_settings.bankName}} | Account #: {{p_settings.bankAccount}}</p>
-            </td>
-        </tr>
-        {% endif %}
-    </table>
+      <!-- Optional Notes -->
+      {% if invoice.notes %}
+      <section class="px-6 pb-6 avoid-break">
+        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-emerald-300">Notes</h3>
+        <p class="whitespace-pre-line text-sm leading-6 text-slate-200">{{ invoice.notes }}</p>
+      </section>
+      {% endif %}
 
-</div>
+      <!-- Footer -->
+      <section class="border-t border-emerald-900/40 bg-brand-panel p-6">
+        <div class="flex items-center justify-between text-xs text-slate-300">
+          <p>Thank you for choosing <span class="font-semibold text-white">Iboy Technology</span>.</p>
+          <p>Generated on {{ invoice.date_created|date:"M j, Y" }}</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Calculators (line totals + 70/30) + Fallback bank-card toggle from Total line -->
+  <script>
+    (function () {
+      // derive currency prefix from grand total cell
+      const grandCell = document.getElementById('grandTotalText');
+      const raw = (grandCell?.textContent || '').trim();
+      const prefix = (raw.match(/^[^\d]+/) || ['']).shift().trim(); // "$", "USD", "₦", "NGN", etc.
+      const totalNumber = parseFloat((raw.replace(/[^\d.,-]/g,'')||'0').replace(/,/g,'')) || 0;
+
+      // 1) line totals
+      document.querySelectorAll('tbody tr[data-qty][data-price]').forEach(row => {
+        const qty = parseFloat(row.getAttribute('data-qty')) || 0;
+        const price = parseFloat(row.getAttribute('data-price')) || 0;
+        const line = qty * price;
+        const cell = row.querySelector('[data-line-total]');
+        if (cell) {
+          const fmt = new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+          cell.textContent = (prefix ? prefix + ' ' : '') + fmt.format(line);
+        }
+      });
+
+      // 2) totals schedule (70/30)
+      const totalEl   = document.getElementById('totalAmt');
+      const depositEl = document.getElementById('depositAmt');
+      const balanceEl = document.getElementById('balanceAmt');
+      if (totalEl && depositEl && balanceEl) {
+        const fmt = n => (prefix ? prefix + ' ' : '') +
+          new Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n);
+        totalEl.textContent   = fmt(totalNumber);
+        depositEl.textContent = fmt(totalNumber * 0.70);
+        balanceEl.textContent = fmt(totalNumber * 0.30);
+      }
+
+      // 3) If the template showed both bank cards (fallback), hide the non-matching one by prefix
+      const ngn = document.getElementById('ngnCard');
+      const usd = document.getElementById('usdCard');
+      const p = prefix.toUpperCase();
+      if (ngn && usd) {
+        if (p === 'NGN' || p === '₦') {
+          usd.style.display = 'none';
+        } else if (p === 'USD' || p === '$') {
+          ngn.style.display = 'none';
+        }
+      }
+    })();
+  </script>
 </body>
 </html>

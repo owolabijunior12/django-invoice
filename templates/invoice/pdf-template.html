@@ -1,158 +1,173 @@
+ {% load static %}
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>{{ p_settings.companyName }}
- - Invoice</title>
+  <meta charset="utf-8" />
+  <title>Iboy Technology — Invoice #{{ invoice.number }}</title>
+
+  <!-- Tailwind (CDN for preview) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { theme: { extend: {} } }</script>
 
   <style>
-    body {
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      color: #555;
-      margin: 0;
-      padding: 0;
-    }
-
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 30px;
-    }
-
-    h1, h2, h3, h4, h5, h6 {
-      margin: 0 0 15px 0;
-    }
-
-    hr {
-      border: 0;
-      border-top: 1px solid #eee;
-      margin: 20px 0;
-    }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
-
-    .table th, .table td {
-      padding: 10px;
-      border-bottom: 1px solid #eee;
-      text-align: left;
-    }
-
-    .table th {
-      font-weight: 600;
-      background: #f8f9fa;
-    }
-
-    .table-responsive {
-      overflow-x: auto;
-    }
-
-    .total-row td {
-      font-weight: bold;
-      border-top: 2px solid #eee;
-    }
-
-    img.logo {
-      width: 100px;
-      max-width: 100px;
-    }
-
-    p.notes {
-      margin-top: 30px;
-      line-height: 1.5;
+    @page { margin: 22mm; }
+    @media print {
+      .no-print { display:none!important; }
+      html,body { background:#fff!important; }
+      .shadow,.shadow-sm,.shadow-md,.shadow-lg { box-shadow:none!important; }
     }
   </style>
 </head>
 
-<body>
-  <div class="container">
-
-    <h1>Invoice: {{ p_settings.companyName }}
-</h1>
-    <hr>
-
-    <!-- Invoice Info -->
-    <div class="table-responsive">
-      <table class="table">
-        <tbody>
-          <tr>
-            <td><img class="logo" src="https://host.tatiblockchain.co.za/img/skolo_logo.png" alt="Skolo Logo"></td>
-            <td></td>
-            <td></td>
-            <td>
-              Invoice #: <strong>{{ invoice.number }}</strong><br>
-              Created: {{ invoice.date_created|date }}<br>
-              Due: {{ invoice.dueDate }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+<body class="bg-slate-100 text-slate-800 antialiased">
+  <!-- Print bar -->
+  <div class="no-print sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div class="mx-auto flex max-w-4xl items-center justify-between px-6 py-3">
+      <p class="text-sm text-slate-600">Invoice preview • #{{ invoice.number }}</p>
+      <button onclick="window.print()"
+        class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800">
+        Print
+      </button>
     </div>
-
-    <!-- Sender & Client Info -->
-    <div class="table-responsive">
-      <table class="table">
-        <tbody>
-          <tr>
-            <td>
-              <strong>{{ p_settings.companyName }}
-</strong><br>
-              {{ p_settings.addressLine1 }}<br>
-              {{ p_settings.province }}, {{ p_settings.postalCode }}<br>
-              {{ p_settings.emailAddress }}<br>
-              {{ p_settings.phoneNumber }}<br>
-              Tax Number: {{ p_settings.taxNumber }}
-            </td>
-
-            <td>
-              <strong>{{ invoice.client.clientName }}</strong><br>
-              {{ invoice.client.addressLine1 }}<br>
-              {{ invoice.client.province }}, {{ invoice.client.postalCode }}<br>
-              {{ invoice.client.emailAddress }}<br>
-              {{ invoice.client.phoneNumber }}<br>
-              Tax Number: {{ invoice.client.taxNumber }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Invoice Items -->
-    <h2>Invoice Items</h2>
-    <div class="table-responsive">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Item</th>
-            <th>Quantity</th>
-            <th>Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for product in products %}
-          <tr>
-            <td>{{ product.title }}</td>
-            <td>{{ product.quantity }}</td>
-            <td>{{ product.currency }} {{ product.price }}</td>
-          </tr>
-          {% endfor %}
-          <tr class="total-row">
-            <td></td>
-            <td>Total</td>
-            <td>{{ invoiceTotal }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Notes -->
-    {% if invoice.notes %}
-    <p class="notes">{{ invoice.notes }}</p>
-    {% endif %}
-
   </div>
+
+  <main class="mx-auto my-8 max-w-4xl px-6">
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <!-- Header -->
+      <section class="border-b border-slate-200 p-6 flex flex-wrap items-start justify-between gap-6">
+        <div class="flex items-center gap-4">
+          {% if p_settings.companyLogo %}
+          <img src="{{ p_settings.companyLogo.url }}" alt="Iboy Technology" class="h-16 w-auto object-contain" />
+          {% endif %}
+          <div>
+            <h1 class="text-2xl font-semibold tracking-tight text-slate-900">Invoice</h1>
+            <p class="text-sm text-slate-500">#{{ invoice.number }}</p>
+          </div>
+        </div>
+        <dl class="text-right">
+          <div>
+            <dt class="text-xs uppercase tracking-wider text-slate-500">Created</dt>
+            <dd class="font-medium text-slate-800">{{ invoice.date_created|date }}</dd>
+          </div>
+          <div class="mt-3">
+            <dt class="text-xs uppercase tracking-wider text-slate-500">Due</dt>
+            <dd class="font-medium text-slate-800">{{ invoice.dueDate }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- From / Bill To -->
+      <section class="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2">
+        <div class="rounded-xl border border-slate-200 p-4">
+          <h2 class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">From</h2>
+          <div class="space-y-0.5 text-sm">
+            <p class="font-medium text-slate-900">Iboy Technology</p>
+            <p>{{ p_settings.addressLine1 }}</p>
+            <p>{{ p_settings.province }}, {{ p_settings.postalCode }}</p>
+            <p>{{ p_settings.country }}</p>
+            <p class="mt-2"><span class="text-slate-500">Email:</span> {{ p_settings.emailAddress }}</p>
+            <p><span class="text-slate-500">Phone:</span> {{ p_settings.phoneNumber }}</p>
+            {% if p_settings.taxNumber %}
+            <p><span class="text-slate-500">Tax #:</span> {{ p_settings.taxNumber }}</p>
+            {% endif %}
+          </div>
+        </div>
+        <div class="rounded-xl border border-slate-200 p-4">
+          <h2 class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Bill To</h2>
+          <div class="space-y-0.5 text-sm">
+            <p class="font-medium text-slate-900">{{ invoice.client.clientName }}</p>
+            <p>{{ invoice.client.addressLine1 }}</p>
+            <p>{{ invoice.client.province }}, {{ invoice.client.postalCode }}</p>
+            <p>{{ invoice.client.country }}</p>
+            <p class="mt-2"><span class="text-slate-500">Email:</span> {{ invoice.client.emailAddress }}</p>
+            <p><span class="text-slate-500">Phone:</span> {{ invoice.client.phoneNumber }}</p>
+            {% if invoice.client.taxNumber %}
+            <p><span class="text-slate-500">Tax #:</span> {{ invoice.client.taxNumber }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <!-- Items -->
+      <section class="px-6 pb-6">
+        <div class="overflow-hidden rounded-xl border border-slate-200">
+          <table class="w-full border-collapse text-sm">
+            <thead class="bg-slate-50 text-slate-600">
+              <tr>
+                <th class="px-4 py-3 text-left font-semibold">Item</th>
+                <th class="px-4 py-3 text-right font-semibold">Quantity</th>
+                <th class="px-4 py-3 text-right font-semibold">Amount</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for product in products %}
+              <tr>
+                <td class="px-4 py-3 font-medium text-slate-900">{{ product.title }}</td>
+                <td class="px-4 py-3 text-right text-slate-800">{{ product.quantity }}</td>
+                <td class="px-4 py-3 text-right text-slate-800">{{ product.currency }} {{ product.price }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td></td>
+                <td class="px-4 py-3 text-right text-slate-600">Total</td>
+                <td class="px-4 py-3 text-right text-base font-semibold text-slate-900">{{ invoiceTotal }}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+
+      <!-- Bank Details -->
+      <section class="p-6">
+        <h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Bank Details</h3>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <!-- NGN -->
+          <div class="rounded-xl border border-emerald-300 bg-emerald-50/50 p-4">
+            <p class="font-semibold text-emerald-700 mb-1">NGN Account</p>
+            <p class="text-sm"><span class="font-medium">Bank:</span> {{ bank_detail.ngn.bank_name }}</p>
+            <p class="text-sm"><span class="font-medium">Account Name:</span> {{ bank_detail.ngn.account_name|default:"Iboy Technology" }}</p>
+            <p class="text-sm"><span class="font-medium">Account #:</span> {{ bank_detail.ngn.account_number }}</p>
+          </div>
+          <!-- USD -->
+          <div class="rounded-xl border border-blue-300 bg-blue-50/50 p-4">
+            <p class="font-semibold text-blue-700 mb-1">USD Account</p>
+            <p class="text-sm"><span class="font-medium">Bank:</span> {{ bank_detail.usd.bank_name }}</p>
+            <p class="text-sm"><span class="font-medium">Account Name:</span> {{ bank_detail.usd.account_name|default:"Iboy Technology" }}</p>
+            <p class="text-sm"><span class="font-medium">Account #:</span> {{ bank_detail.usd.account_number }}</p>
+            {% if bank_detail.usd.swift_code %}
+            <p class="text-sm"><span class="font-medium">SWIFT:</span> {{ bank_detail.usd.swift_code }}</p>
+            {% endif %}
+          </div>
+          <!-- GBP -->
+          <div class="rounded-xl border border-fuchsia-300 bg-fuchsia-50/50 p-4">
+            <p class="font-semibold text-fuchsia-700 mb-1">GBP Account</p>
+            <p class="text-sm"><span class="font-medium">Bank:</span> {{ bank_detail.gbp.bank_name }}</p>
+            <p class="text-sm"><span class="font-medium">Account Name:</span> {{ bank_detail.gbp.account_name|default:"Iboy Technology" }}</p>
+            <p class="text-sm"><span class="font-medium">Account #:</span> {{ bank_detail.gbp.account_number }}</p>
+            {% if bank_detail.gbp.swift_code %}
+            <p class="text-sm"><span class="font-medium">SWIFT:</span> {{ bank_detail.gbp.swift_code }}</p>
+            {% endif %}
+          </div>
+        </div>
+        <p class="mt-4 text-xs text-slate-500">Please include invoice reference <strong>#{{ invoice.number }}</strong> with your payment.</p>
+      </section>
+
+      <!-- Notes -->
+      {% if invoice.notes %}
+      <section class="p-6">
+        <h3 class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Notes</h3>
+        <p class="whitespace-pre-line text-sm leading-6 text-slate-700">{{ invoice.notes }}</p>
+      </section>
+      {% endif %}
+
+      <!-- Footer -->
+      <section class="border-t border-slate-200 p-6 flex items-center justify-between text-xs text-slate-500">
+        <p>Thank you for choosing Iboy Technology.</p>
+        <p>Generated on {{ invoice.date_created|date:"M j, Y" }}</p>
+      </section>
+    </div>
+  </main>
 </body>
 </html>
