@@ -189,7 +189,7 @@
           {% elif cur == 'USD' or cur == '$' %}
             <!-- USD ONLY -->
             <div id="usdCard" class="rounded-xl border border-emerald-600 bg-emerald-900/25 p-4 shadow-sm">
-              <div class="mb-2 flex items-center justify-between">
+              {% comment %} <div class="mb-2 flex items-center justify-between">
                 <span class="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-900/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">USD</span>
                 <span class="text-[11px] text-slate-400">US Dollar</span>
               </div>
@@ -200,7 +200,7 @@
                 {% if bank_detail.usd.swift_code %}
                 <div class="flex justify-between gap-3"><dt class="text-slate-400">SWIFT</dt><dd class="font-mono text-emerald-300">{{ bank_detail.usd.swift_code }}</dd></div>
                 {% endif %}
-              </dl>
+              </dl> {% endcomment %}
             </div>
           {% else %}
             <!-- Fallback: if currency not detected, show both (JS will hide the other based on Total line) -->
@@ -221,14 +221,14 @@
                   <span class="inline-flex items-center rounded-full border border-emerald-600 bg-emerald-900/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">USD</span>
                   <span class="text-[11px] text-slate-400">US Dollar</span>
                 </div>
-                <dl class="space-y-1 text-sm">
+                {% comment %} <dl class="space-y-1 text-sm">
                   <div class="flex justify-between gap-3"><dt class="text-slate-400">Bank</dt><dd class="font-medium text-white">{{ bank_detail.usd.bank_name|default:"—" }}</dd></div>
                   <div class="flex justify-between gap-3"><dt class="text-slate-400">Account Name</dt><dd class="text-white">{{ bank_detail.usd.account_name|default:"Iboy Technology" }}</dd></div>
                   <div class="flex justify-between gap-3"><dt class="text-slate-400">Account / IBAN</dt><dd class="font-mono text-emerald-300">{{ bank_detail.usd.account_number|default:"—" }}</dd></div>
                   {% if bank_detail.usd.swift_code %}
                   <div class="flex justify-between gap-3"><dt class="text-slate-400">SWIFT</dt><dd class="font-mono text-emerald-300">{{ bank_detail.usd.swift_code }}</dd></div>
                   {% endif %}
-                </dl>
+                </dl> {% endcomment %}
               </div>
             </div>
           {% endif %}
